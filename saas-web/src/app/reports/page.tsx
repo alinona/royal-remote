@@ -91,7 +91,7 @@ export default function ReportsPage() {
     <AppLayout title="التقارير والتحليلات">
       <div className="space-y-6">
         {/* Summary KPIs */}
-        <Stagger className="grid grid-cols-4 gap-4">
+        <Stagger className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
             { label: "التقارير المُنشأة هذا الشهر", value: "24", icon: FileText, color: "text-blue-600 bg-blue-50" },
             { label: "آخر تحديث", value: "اليوم", icon: CalendarCheck, color: "text-green-600 bg-green-50" },

@@ -131,7 +131,15 @@ export default function GradesPage() {
                 </button>
               </div>
               <div className="flex-1" />
-              <motion.button className="btn-primary gap-2 text-sm" whileTap={{ scale: 0.97 }}>
+              <motion.button
+                className="btn-primary gap-2 text-sm"
+                whileTap={{ scale: 0.97 }}
+                onClick={() => {
+                  const count = Object.keys(grades).length;
+                  if (count === 0) { alert("لم تُدخل أي درجات بعد"); return; }
+                  alert(`تم حفظ ${count} درجة بنجاح ✓`);
+                }}
+              >
                 <Save className="w-4 h-4" />
                 حفظ الدرجات
               </motion.button>
@@ -148,7 +156,7 @@ export default function GradesPage() {
               exit={{ opacity: 0, y: -8 }}
             >
               {/* Summary cards */}
-              <Stagger className="grid grid-cols-4 gap-4 mb-6">
+              <Stagger className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                 {[
                   { label: "متوسط الدرجات", value: `${stats.avg.toFixed(1)}/${maxScore}`, icon: BarChart2, color: "text-blue-600 bg-blue-50" },
                   { label: "أعلى درجة", value: `${stats.highest}/${maxScore}`, icon: Award, color: "text-green-600 bg-green-50" },
@@ -171,6 +179,8 @@ export default function GradesPage() {
 
               {/* Grade entry table */}
               <div className="card-base overflow-hidden">
+                <div className="overflow-x-auto">
+                <div className="min-w-[520px]">
                 <div className="grid grid-cols-[2fr_1fr_1fr_1fr] gap-4 px-5 py-3 border-b border-border bg-surface-50">
                   {["الطالب", "الدرجة", "النسبة المئوية", "التقدير"].map(h => (
                     <span key={h} className="text-[11px] font-semibold text-ink-muted uppercase tracking-wide text-right">{h}</span>
@@ -273,6 +283,8 @@ export default function GradesPage() {
                       </motion.div>
                     );
                   })}
+                </div>
+                </div>
                 </div>
               </div>
             </motion.div>

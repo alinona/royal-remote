@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Link from "next/link";
 import {
   Users, GraduationCap, CalendarCheck, BookOpen,
   TrendingUp, AlertTriangle, Zap, ArrowLeft, Activity,
@@ -126,42 +127,13 @@ function HeroBanner() {
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-l from-primary-700 via-primary-600 to-primary-500 p-6 text-white">
         <GeometricMesh />
 
-        <div className="relative flex items-center justify-between">
-          <div className="flex items-center gap-6">
-            {/* Stats rings */}
-            <div className="flex gap-3">
-              <div className="text-center">
-                <ScoreRing value={92} size={64} strokeWidth={5} color="white" label="حضور" className="opacity-90" />
-              </div>
-              <div className="text-center">
-                <ScoreRing value={78} size={64} strokeWidth={5} color="rgba(255,255,255,0.7)" label="GPA" className="opacity-90" />
-              </div>
-            </div>
-
-            <div className="h-12 w-px bg-white/20" />
-
-            {/* Quick stats */}
-            <div className="grid grid-cols-3 gap-4">
-              {[
-                { label: "حضر اليوم", value: "1,192", sub: "من 1,248" },
-                { label: "غياب", value: "56", sub: "طالبًا" },
-                { label: "مدرس نشط", value: "84", sub: "من 87" },
-              ].map((stat) => (
-                <div key={stat.label} className="text-center">
-                  <div className="text-2xl font-bold">{stat.value}</div>
-                  <div className="text-xs text-white/70 mt-0.5">{stat.label}</div>
-                  <div className="text-xs text-white/50">{stat.sub}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Greeting */}
-          <div className="text-right">
+        <div className="relative flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          {/* Greeting (shown first on mobile) */}
+          <div className="text-right order-first md:order-last">
             <motion.p
               initial={{ opacity: 0, y: -8 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-white/60 text-sm"
+              className="text-white/60 text-xs md:text-sm"
             >
               {day}
             </motion.p>
@@ -169,7 +141,7 @@ function HeroBanner() {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="text-2xl font-bold mt-1"
+              className="text-xl md:text-2xl font-bold mt-1"
             >
               {greeting}، منى
             </motion.h2>
@@ -177,10 +149,39 @@ function HeroBanner() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.2 }}
-              className="text-white/70 text-sm mt-1"
+              className="text-white/70 text-xs md:text-sm mt-1"
             >
               لديك 3 تنبيهات تحتاج إلى مراجعة
             </motion.p>
+          </div>
+
+          <div className="flex items-center gap-4 md:gap-6 flex-wrap">
+            {/* Stats rings - hidden on very small screens */}
+            <div className="hidden sm:flex gap-3">
+              <div className="text-center">
+                <ScoreRing value={92} size={60} strokeWidth={5} color="white" label="حضور" className="opacity-90" />
+              </div>
+              <div className="text-center">
+                <ScoreRing value={78} size={60} strokeWidth={5} color="rgba(255,255,255,0.7)" label="GPA" className="opacity-90" />
+              </div>
+            </div>
+
+            <div className="hidden md:block h-12 w-px bg-white/20" />
+
+            {/* Quick stats */}
+            <div className="grid grid-cols-3 gap-3 md:gap-4">
+              {[
+                { label: "حضر اليوم", value: "1,192", sub: "من 1,248" },
+                { label: "غياب", value: "56", sub: "طالبًا" },
+                { label: "مدرس نشط", value: "84", sub: "من 87" },
+              ].map((stat) => (
+                <div key={stat.label} className="text-center">
+                  <div className="text-lg md:text-2xl font-bold">{stat.value}</div>
+                  <div className="text-[10px] md:text-xs text-white/70 mt-0.5">{stat.label}</div>
+                  <div className="text-[10px] text-white/50">{stat.sub}</div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -492,30 +493,31 @@ function QuickActionsCard() {
 
         <div className="grid grid-cols-3 gap-3">
           {quickActions.map((action, i) => (
-            <motion.a
-              key={action.label}
-              href={action.href}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.04 * i }}
-              whileHover={{ scale: 1.04, y: -2 }}
-              whileTap={{ scale: 0.96 }}
-              className={cn(
-                "flex flex-col items-center gap-2 p-4 rounded-xl",
-                "hover:shadow-card transition-all duration-200 cursor-pointer",
-                "border border-border hover:border-surface-200"
-              )}
-            >
-              <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", action.color)}>
-                <action.icon className="w-5 h-5" strokeWidth={1.8} />
-              </div>
-              <span className="text-xs font-medium text-ink text-center leading-tight">
-                {action.label}
-              </span>
-            </motion.a>
+            <Link key={action.label} href={action.href}>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.04 * i }}
+                whileHover={{ scale: 1.04, y: -2 }}
+                whileTap={{ scale: 0.96 }}
+                className={cn(
+                  "flex flex-col items-center gap-2 p-3 md:p-4 rounded-xl",
+                  "hover:shadow-card transition-all duration-200 cursor-pointer",
+                  "border border-border hover:border-surface-200"
+                )}
+              >
+                <div className={cn("w-9 h-9 md:w-10 md:h-10 rounded-xl flex items-center justify-center", action.color)}>
+                  <action.icon className="w-4 h-4 md:w-5 md:h-5" strokeWidth={1.8} />
+                </div>
+                <span className="text-[11px] md:text-xs font-medium text-ink text-center leading-tight">
+                  {action.label}
+                </span>
+              </motion.div>
+            </Link>
           ))}
         </div>
       </div>
     </FadeIn>
   );
 }
+

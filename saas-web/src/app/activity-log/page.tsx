@@ -125,7 +125,7 @@ export default function ActivityLogPage() {
     <AppLayout title="سجل النشاطات">
       <div className="space-y-6">
         {/* Stats */}
-        <Stagger className="grid grid-cols-4 gap-4">
+        <Stagger className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
             { label: "نشاطات اليوم", value: todayCount, icon: Activity, color: "text-primary-600 bg-primary-50" },
             { label: "مستخدمون نشطون", value: uniqueUsers, icon: Users, color: "text-green-600 bg-green-50" },
@@ -184,7 +184,11 @@ export default function ActivityLogPage() {
               ))}
             </select>
 
-            <motion.button className="btn-secondary gap-2 text-sm" whileTap={{ scale: 0.97 }}>
+            <motion.button
+              className="btn-secondary gap-2 text-sm"
+              whileTap={{ scale: 0.97 }}
+              onClick={() => alert(`تصدير ${filtered.length} سجل إلى CSV`)}
+            >
               <Download className="w-4 h-4" />
               تصدير
             </motion.button>
@@ -205,6 +209,8 @@ export default function ActivityLogPage() {
         {/* Log Table */}
         <FadeIn delay={0.15}>
           <div className="card-base overflow-hidden">
+            <div className="overflow-x-auto">
+            <div className="min-w-[700px]">
             <div className="grid grid-cols-[2fr_1fr_1fr_2fr_1fr] gap-4 px-5 py-3 border-b border-border bg-surface-50">
               {["المستخدم", "الإجراء", "العنصر", "التفاصيل", "الوقت"].map(h => (
                 <span key={h} className="text-[11px] font-semibold text-ink-muted uppercase tracking-wide text-right">{h}</span>
@@ -268,6 +274,8 @@ export default function ActivityLogPage() {
                   </motion.div>
                 );
               })}
+            </div>
+            </div>
             </div>
           </div>
         </FadeIn>

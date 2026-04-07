@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search, Bell, X, Command, Moon, Sun, Zap,
-  ChevronDown, Clock, TrendingUp,
+  Clock, TrendingUp, Menu,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { mockStudents } from "@/lib/utils/mock-data";
@@ -14,14 +15,25 @@ import { mockStudents } from "@/lib/utils/mock-data";
 interface TopbarProps {
   sidebarCollapsed: boolean;
   title?: string;
+  isMobile?: boolean;
+  onMobileMenuToggle?: () => void;
 }
 
-export function Topbar({ sidebarCollapsed, title }: TopbarProps) {
+export function Topbar({ sidebarCollapsed, title, isMobile, onMobileMenuToggle }: TopbarProps) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [notifOpen, setNotifOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
+
+  // Apply dark mode to document
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, [darkMode]);
 
   // Keyboard shortcut
   useEffect(() => {
@@ -34,11 +46,25 @@ export function Topbar({ sidebarCollapsed, title }: TopbarProps) {
       if (e.key === "Escape") {
         setSearchOpen(false);
         setSearchQuery("");
+        setNotifOpen(false);
       }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, []);
+
+  // Close notifications when clicking outside
+  useEffect(() => {
+    if (!notifOpen) return;
+    const handler = (e: MouseEvent) => {
+      const target = e.target as Element;
+      if (!target.closest("[data-notif-panel]") && !target.closest("[data-notif-btn]")) {
+        setNotifOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [notifOpen]);
 
   // Search results
   const results = searchQuery.length > 1
@@ -49,26 +75,38 @@ export function Topbar({ sidebarCollapsed, title }: TopbarProps) {
       )
     : [];
 
+  const rightOffset = isMobile ? 0 : sidebarCollapsed ? 72 : 260;
+
   return (
     <>
       <motion.header
         className={cn(
-          "fixed top-0 left-0 z-30 h-16 bg-card/80 backdrop-blur-xl",
-          "border-b border-border flex items-center gap-4 px-6",
-          "transition-all duration-300"
+          "fixed top-0 left-0 z-30 h-16 bg-card/90 backdrop-blur-xl",
+          "border-b border-border flex items-center gap-2 md:gap-4 px-3 md:px-6",
         )}
-        style={{
-          right: sidebarCollapsed ? "72px" : "260px",
-        }}
+        style={{ right: rightOffset }}
+        transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
       >
+        {/* Mobile menu button */}
+        {isMobile && (
+          <motion.button
+            onClick={onMobileMenuToggle}
+            className="p-2 rounded-xl hover:bg-surface-50 text-ink-muted hover:text-ink transition-colors flex-shrink-0"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <Menu className="w-5 h-5" />
+          </motion.button>
+        )}
+
         {/* Page title */}
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           {title && (
             <motion.h1
               key={title}
               initial={{ opacity: 0, y: -8 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-base font-semibold text-ink"
+              className="text-sm md:text-base font-semibold text-ink truncate"
             >
               {title}
             </motion.h1>
@@ -83,23 +121,28 @@ export function Topbar({ sidebarCollapsed, title }: TopbarProps) {
             "bg-surface-50 border border-border",
             "text-ink-muted text-sm",
             "hover:bg-surface-100 hover:border-surface-200 transition-all",
-            "group w-48"
+            "group",
+            isMobile ? "w-10 justify-center" : "w-48"
           )}
           whileHover={{ scale: 1.01 }}
           whileTap={{ scale: 0.98 }}
         >
-          <Search className="w-4 h-4 text-ink-subtle" />
-          <span className="flex-1 text-right text-ink-subtle">بحث سريع...</span>
-          <kbd className="hidden sm:flex items-center gap-1 text-[10px] px-1.5 py-0.5 bg-surface-100 border border-border rounded-md">
-            <Command className="w-2.5 h-2.5" />
-            K
-          </kbd>
+          <Search className="w-4 h-4 text-ink-subtle flex-shrink-0" />
+          {!isMobile && (
+            <>
+              <span className="flex-1 text-right text-ink-subtle text-xs">بحث سريع...</span>
+              <kbd className="hidden sm:flex items-center gap-1 text-[10px] px-1.5 py-0.5 bg-surface-100 border border-border rounded-md">
+                <Command className="w-2.5 h-2.5" />K
+              </kbd>
+            </>
+          )}
         </motion.button>
 
         {/* Notifications */}
         <div className="relative">
           <motion.button
-            onClick={() => setNotifOpen(!notifOpen)}
+            data-notif-btn
+            onClick={() => setNotifOpen(v => !v)}
             className="relative p-2 rounded-xl hover:bg-surface-50 text-ink-muted hover:text-ink transition-colors"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -110,17 +153,18 @@ export function Topbar({ sidebarCollapsed, title }: TopbarProps) {
 
           <AnimatePresence>
             {notifOpen && (
-              <NotificationsPanel onClose={() => setNotifOpen(false)} />
+              <NotificationsPanel onClose={() => setNotifOpen(false)} isMobile={isMobile} />
             )}
           </AnimatePresence>
         </div>
 
         {/* Theme toggle */}
         <motion.button
-          onClick={() => setDarkMode(!darkMode)}
+          onClick={() => setDarkMode(v => !v)}
           className="p-2 rounded-xl hover:bg-surface-50 text-ink-muted hover:text-ink transition-colors"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
+          title={darkMode ? "الوضع النهاري" : "الوضع الليلي"}
         >
           <AnimatePresence mode="wait">
             {darkMode ? (
@@ -135,8 +179,8 @@ export function Topbar({ sidebarCollapsed, title }: TopbarProps) {
           </AnimatePresence>
         </motion.button>
 
-        {/* Academic year badge */}
-        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-primary-50 text-primary-700 rounded-xl border border-primary-100">
+        {/* Academic year badge (hidden on small mobile) */}
+        <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-primary-50 text-primary-700 rounded-xl border border-primary-100 flex-shrink-0">
           <Zap className="w-3.5 h-3.5" />
           <span className="text-xs font-semibold">1446 / 1447</span>
         </div>
@@ -169,7 +213,13 @@ interface SearchModalProps {
 }
 
 function SearchModal({ query, onQueryChange, results, onClose, searchRef }: SearchModalProps) {
+  const router = useRouter();
   const recentSearches = ["عمر الشمري", "الصف الأول - أ", "اختبار الرياضيات"];
+
+  const handleStudentClick = (studentId: string) => {
+    onClose();
+    router.push(`/students?id=${studentId}`);
+  };
 
   return (
     <>
@@ -189,8 +239,8 @@ function SearchModal({ query, onQueryChange, results, onClose, searchRef }: Sear
         exit={{ opacity: 0, scale: 0.96, y: -16 }}
         transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
         className={cn(
-          "fixed top-20 left-1/2 -translate-x-1/2 z-50",
-          "w-full max-w-xl",
+          "fixed top-20 left-4 right-4 md:left-1/2 md:right-auto md:-translate-x-1/2 z-50",
+          "md:w-full md:max-w-xl",
           "bg-card rounded-2xl border border-border shadow-card-hover",
           "overflow-hidden"
         )}
@@ -211,11 +261,11 @@ function SearchModal({ query, onQueryChange, results, onClose, searchRef }: Sear
               <X className="w-4 h-4" />
             </button>
           )}
-          <kbd className="text-[10px] px-1.5 py-0.5 bg-surface-50 border border-border rounded text-ink-muted">Esc</kbd>
+          <kbd className="hidden sm:block text-[10px] px-1.5 py-0.5 bg-surface-50 border border-border rounded text-ink-muted">Esc</kbd>
         </div>
 
         {/* Results */}
-        <div className="max-h-80 overflow-y-auto p-2">
+        <div className="max-h-72 overflow-y-auto p-2">
           {query.length > 1 ? (
             results.length > 0 ? (
               <div>
@@ -228,7 +278,7 @@ function SearchModal({ query, onQueryChange, results, onClose, searchRef }: Sear
                     title={student.fullName}
                     subtitle={`${student.studentCode} · ${student.class.name}`}
                     type="student"
-                    onClick={onClose}
+                    onClick={() => handleStudentClick(student.id)}
                   />
                 ))}
               </div>
@@ -317,7 +367,7 @@ function SearchResultItem({
 
 // ─── Notifications Panel ─────────────────────────────────────────────────────
 
-function NotificationsPanel({ onClose }: { onClose: () => void }) {
+function NotificationsPanel({ onClose, isMobile }: { onClose: () => void; isMobile?: boolean }) {
   const notifications = [
     { id: 1, title: "34 طالبًا في خطر أكاديمي", desc: "تحليل الذكاء الاصطناعي", time: "منذ 5 دقائق", urgent: true },
     { id: 2, title: "انتهى تسجيل الحضور - الصف 1أ", desc: "أحمد الزهراني", time: "منذ 10 دقائق", urgent: false },
@@ -326,18 +376,22 @@ function NotificationsPanel({ onClose }: { onClose: () => void }) {
 
   return (
     <motion.div
+      data-notif-panel
       initial={{ opacity: 0, y: 8, scale: 0.96 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: 8, scale: 0.96 }}
       transition={{ duration: 0.2 }}
       className={cn(
-        "absolute top-full left-0 mt-2 w-80",
+        "absolute top-full mt-2 z-50",
         "bg-card rounded-2xl border border-border shadow-card-hover",
-        "overflow-hidden z-50"
+        "overflow-hidden",
+        isMobile
+          ? "left-0 right-0 w-auto mx-2"
+          : "left-0 w-80"
       )}
     >
       <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-        <button onClick={onClose} className="text-ink-muted hover:text-ink">
+        <button onClick={onClose} className="text-ink-muted hover:text-ink transition-colors">
           <X className="w-4 h-4" />
         </button>
         <div className="flex items-center gap-2">

@@ -104,7 +104,7 @@ export default function AttendancePage() {
         </FadeIn>
 
         {/* Stats Strip */}
-        <Stagger className="grid grid-cols-5 gap-3">
+        <Stagger className="grid grid-cols-3 md:grid-cols-5 gap-3">
           {[
             { label: "حاضر", value: stats.present, color: "text-green-600 bg-green-50 border-green-100", icon: Check },
             { label: "غائب", value: stats.absent, color: "text-red-600 bg-red-50 border-red-100", icon: X },

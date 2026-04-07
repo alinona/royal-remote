@@ -132,9 +132,10 @@ export default function AIAssistantPage() {
 
   return (
     <AppLayout title="المساعد الذكي">
-      <div className="flex gap-6 h-[calc(100vh-10rem)]">
+      <div className="flex flex-col md:flex-row gap-4 md:gap-6 h-[calc(100vh-10rem)] min-h-[500px]">
         {/* Sidebar - Quick Prompts */}
-        <div className="w-64 flex-shrink-0 space-y-4 overflow-y-auto">
+        <div className="md:w-64 flex-shrink-0 space-y-3 md:space-y-4 overflow-x-auto md:overflow-y-auto">
+          <div className="flex md:flex-col gap-2 md:gap-0 md:space-y-4">
           <FadeIn>
             <div className="card-base p-4">
               <div className="flex items-center gap-2 text-right mb-3">
@@ -189,6 +190,7 @@ export default function AIAssistantPage() {
               </div>
             </div>
           </FadeIn>
+          </div>
         </div>
 
         {/* Chat Area */}
