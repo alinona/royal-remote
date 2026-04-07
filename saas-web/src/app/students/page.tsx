@@ -669,6 +669,7 @@ function NewStudentDrawer({ onClose, onAdd, existingCodes }: { onClose: () => vo
     const riskLevel = fd.get("riskLevel") as 'low'|'medium'|'high';
     const guardianName = fd.get("guardianName") as string;
     const guardianPhone = fd.get("guardianPhone") as string;
+    const address = fd.get("address") as string;
     
     if (!fullName || !nationalId || !classId || !gender || !studentCode) {
       alert("الرجاء تعبئة جميع الحقول المطلوبة");
@@ -843,6 +844,7 @@ function EditStudentDrawer({ student, onClose, onSave, existingCodes }: { studen
     const riskLevel = fd.get("riskLevel") as 'low'|'medium'|'high';
     const guardianName = fd.get("guardianName") as string;
     const guardianPhone = fd.get("guardianPhone") as string;
+    const address = fd.get("address") as string;
     
     if (!fullName || !nationalId || !classId || !gender || !studentCode) {
       alert("الرجاء تعبئة جميع الحقول المطلوبة");
