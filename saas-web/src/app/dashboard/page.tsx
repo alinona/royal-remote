@@ -131,10 +131,10 @@ function HeroBanner() {
             {/* Stats rings */}
             <div className="flex gap-3">
               <div className="text-center">
-                <ScoreRing value={92} size={64} strokeWidth={5} color="white" label="حضور" className="opacity-90" />
+                <ScoreRing value={92} size={64} strokeWidth={5} color="white" textColor="text-white" label="حضور" className="opacity-100" />
               </div>
               <div className="text-center">
-                <ScoreRing value={78} size={64} strokeWidth={5} color="rgba(255,255,255,0.7)" label="GPA" className="opacity-90" />
+                <ScoreRing value={78} size={64} strokeWidth={5} color="white" textColor="text-white" label="GPA" className="opacity-100" />
               </div>
             </div>
 
@@ -177,7 +177,7 @@ function HeroBanner() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.2 }}
-              className="text-white/70 text-sm mt-1"
+              className="text-white font-medium text-sm mt-1"
             >
               لديك 3 تنبيهات تحتاج إلى مراجعة
             </motion.p>
@@ -319,8 +319,8 @@ function AIInsightsCard() {
           ))}
         </div>
 
-        <button className="mt-3 w-full flex items-center justify-center gap-2 text-xs text-primary-600 hover:text-primary-700 py-2 rounded-xl hover:bg-primary-50 transition-colors">
-          <ArrowLeft className="w-3 h-3" />
+        <button onClick={() => window.location.href = "/ai-assistant"} className="mt-3 w-full flex items-center justify-center gap-2 text-xs text-primary-600 hover:text-primary-700 py-2 rounded-xl hover:bg-primary-50 transition-colors">
+          <Zap className="w-3 h-3" />
           عرض جميع التنبيهات
         </button>
       </div>
@@ -371,9 +371,9 @@ function AtRiskStudentsCard() {
           ))}
         </div>
 
-        <button className="mt-3 w-full flex items-center justify-center gap-2 text-xs text-primary-600 hover:text-primary-700 py-2 rounded-xl hover:bg-primary-50 transition-colors">
+        <button onClick={() => window.location.href = "/students"} className="mt-3 w-full flex items-center justify-center gap-2 text-xs text-primary-600 hover:text-primary-700 py-2 rounded-xl hover:bg-primary-50 transition-colors">
           <Eye className="w-3 h-3" />
-          عرض جميع الطلاب
+          عرض جميع الطلاب الفرعي
         </button>
       </div>
     </FadeIn>
@@ -461,7 +461,7 @@ function ActivityFeedCard() {
           })}
         </div>
 
-        <button className="w-full flex items-center justify-center gap-2 text-xs text-primary-600 hover:text-primary-700 py-2 rounded-xl hover:bg-primary-50 transition-colors">
+        <button onClick={() => window.location.href = "/activity-log"} className="w-full flex items-center justify-center gap-2 text-xs text-primary-600 hover:text-primary-700 py-2 rounded-xl hover:bg-primary-50 transition-colors">
           <BarChart2 className="w-3 h-3" />
           عرض سجل النشاطات الكامل
         </button>
@@ -473,7 +473,7 @@ function ActivityFeedCard() {
 // ─── Quick Actions ────────────────────────────────────────────────────────────
 
 const quickActions = [
-  { label: "إضافة طالب جديد", icon: Users, color: "bg-blue-50 text-blue-600", href: "/students/new" },
+  { label: "إضافة طالب جديد", icon: Users, color: "bg-blue-50 text-blue-600", href: "/students" },
   { label: "تسجيل الحضور", icon: CalendarCheck, color: "bg-green-50 text-green-600", href: "/attendance" },
   { label: "إدخال الدرجات", icon: BookOpen, color: "bg-amber-50 text-amber-600", href: "/grades" },
   { label: "إنشاء تقرير", icon: BarChart2, color: "bg-purple-50 text-purple-600", href: "/reports" },
