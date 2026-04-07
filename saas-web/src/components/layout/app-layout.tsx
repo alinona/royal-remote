@@ -16,40 +16,36 @@ export function AppLayout({ children, title }: AppLayoutProps) {
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    const mq = window.matchMedia("(max-width: 767px)");
-    const update = (e: MediaQueryListEvent | MediaQueryList) => {
-      setIsMobile(e.matches);
-      if (e.matches) setMobileMenuOpen(false);
-    };
-    update(mq);
-    mq.addEventListener("change", update as (e: MediaQueryListEvent) => void);
-    return () => mq.removeEventListener("change", update as (e: MediaQueryListEvent) => void);
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
-
-  const mainMargin = isMobile ? 0 : sidebarCollapsed ? 72 : 260;
 
   return (
     <div className="min-h-screen bg-background geometric-bg" dir="rtl">
-      <Sidebar
-        collapsed={sidebarCollapsed}
+      <Sidebar 
+        collapsed={sidebarCollapsed} 
         onCollapse={setSidebarCollapsed}
         mobileOpen={mobileMenuOpen}
         onMobileClose={() => setMobileMenuOpen(false)}
         isMobile={isMobile}
       />
-      <Topbar
-        sidebarCollapsed={sidebarCollapsed}
+      <Topbar 
+        sidebarCollapsed={sidebarCollapsed} 
         title={title}
+        onMobileMenuToggle={() => setMobileMenuOpen(true)}
         isMobile={isMobile}
-        onMobileMenuToggle={() => setMobileMenuOpen(v => !v)}
       />
 
       <motion.main
-        animate={{ marginRight: mainMargin }}
+        animate={{
+          marginRight: isMobile ? 0 : (sidebarCollapsed ? 72 : 260),
+        }}
         transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-        className="pt-16 min-h-screen"
+        className="pt-16 min-h-screen transition-all"
       >
-        <div className="p-4 md:p-6 max-w-[1600px] mx-auto">
+        <div className="p-4 md:p-6 max-w-[1600px] mx-auto overflow-x-hidden">
           {children}
         </div>
       </motion.main>

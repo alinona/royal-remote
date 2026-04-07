@@ -127,9 +127,38 @@ function HeroBanner() {
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-l from-primary-700 via-primary-600 to-primary-500 p-6 text-white">
         <GeometricMesh />
 
-        <div className="relative flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          {/* Greeting (shown first on mobile) */}
-          <div className="text-right order-first md:order-last">
+        <div className="relative flex items-center justify-between">
+          <div className="flex items-center gap-6">
+            {/* Stats rings */}
+            <div className="flex gap-3">
+              <div className="text-center">
+                <ScoreRing value={92} size={64} strokeWidth={5} color="white" textColor="text-white" label="حضور" className="opacity-100" />
+              </div>
+              <div className="text-center">
+                <ScoreRing value={78} size={64} strokeWidth={5} color="white" textColor="text-white" label="GPA" className="opacity-100" />
+              </div>
+            </div>
+
+            <div className="h-12 w-px bg-white/20" />
+
+            {/* Quick stats */}
+            <div className="grid grid-cols-3 gap-4">
+              {[
+                { label: "حضر اليوم", value: "1,192", sub: "من 1,248" },
+                { label: "غياب", value: "56", sub: "طالبًا" },
+                { label: "مدرس نشط", value: "84", sub: "من 87" },
+              ].map((stat) => (
+                <div key={stat.label} className="text-center">
+                  <div className="text-2xl font-bold">{stat.value}</div>
+                  <div className="text-xs text-white/70 mt-0.5">{stat.label}</div>
+                  <div className="text-xs text-white/50">{stat.sub}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Greeting */}
+          <div className="text-right">
             <motion.p
               initial={{ opacity: 0, y: -8 }}
               animate={{ opacity: 1, y: 0 }}
@@ -149,7 +178,7 @@ function HeroBanner() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.2 }}
-              className="text-white/70 text-xs md:text-sm mt-1"
+              className="text-white font-medium text-sm mt-1"
             >
               لديك 3 تنبيهات تحتاج إلى مراجعة
             </motion.p>
@@ -320,8 +349,8 @@ function AIInsightsCard() {
           ))}
         </div>
 
-        <button className="mt-3 w-full flex items-center justify-center gap-2 text-xs text-primary-600 hover:text-primary-700 py-2 rounded-xl hover:bg-primary-50 transition-colors">
-          <ArrowLeft className="w-3 h-3" />
+        <button onClick={() => window.location.href = "/ai-assistant"} className="mt-3 w-full flex items-center justify-center gap-2 text-xs text-primary-600 hover:text-primary-700 py-2 rounded-xl hover:bg-primary-50 transition-colors">
+          <Zap className="w-3 h-3" />
           عرض جميع التنبيهات
         </button>
       </div>
@@ -372,9 +401,9 @@ function AtRiskStudentsCard() {
           ))}
         </div>
 
-        <button className="mt-3 w-full flex items-center justify-center gap-2 text-xs text-primary-600 hover:text-primary-700 py-2 rounded-xl hover:bg-primary-50 transition-colors">
+        <button onClick={() => window.location.href = "/students"} className="mt-3 w-full flex items-center justify-center gap-2 text-xs text-primary-600 hover:text-primary-700 py-2 rounded-xl hover:bg-primary-50 transition-colors">
           <Eye className="w-3 h-3" />
-          عرض جميع الطلاب
+          عرض جميع الطلاب الفرعي
         </button>
       </div>
     </FadeIn>
@@ -462,7 +491,7 @@ function ActivityFeedCard() {
           })}
         </div>
 
-        <button className="w-full flex items-center justify-center gap-2 text-xs text-primary-600 hover:text-primary-700 py-2 rounded-xl hover:bg-primary-50 transition-colors">
+        <button onClick={() => window.location.href = "/activity-log"} className="w-full flex items-center justify-center gap-2 text-xs text-primary-600 hover:text-primary-700 py-2 rounded-xl hover:bg-primary-50 transition-colors">
           <BarChart2 className="w-3 h-3" />
           عرض سجل النشاطات الكامل
         </button>
@@ -474,7 +503,7 @@ function ActivityFeedCard() {
 // ─── Quick Actions ────────────────────────────────────────────────────────────
 
 const quickActions = [
-  { label: "إضافة طالب جديد", icon: Users, color: "bg-blue-50 text-blue-600", href: "/students/new" },
+  { label: "إضافة طالب جديد", icon: Users, color: "bg-blue-50 text-blue-600", href: "/students" },
   { label: "تسجيل الحضور", icon: CalendarCheck, color: "bg-green-50 text-green-600", href: "/attendance" },
   { label: "إدخال الدرجات", icon: BookOpen, color: "bg-amber-50 text-amber-600", href: "/grades" },
   { label: "إنشاء تقرير", icon: BarChart2, color: "bg-purple-50 text-purple-600", href: "/reports" },

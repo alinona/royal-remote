@@ -120,9 +120,9 @@ export function getRiskLevel(attendance: number, gpa: number): "low" | "medium" 
 }
 
 export const riskLevelLabel: Record<string, string> = {
-  low: "منخفض",
+  low: "ممتاز/جيد",
   medium: "متوسط",
-  high: "مرتفع",
+  high: "ضعيف",
 };
 
 export const riskLevelColor: Record<string, string> = {

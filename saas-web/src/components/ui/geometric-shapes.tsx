@@ -185,6 +185,7 @@ interface ScoreRingProps {
   size?: number;
   strokeWidth?: number;
   color?: string;
+  textColor?: string;
   label?: string;
   className?: string;
 }
@@ -195,6 +196,7 @@ export function ScoreRing({
   size = 80,
   strokeWidth = 6,
   color,
+  textColor,
   label,
   className,
 }: ScoreRingProps) {
@@ -230,7 +232,7 @@ export function ScoreRing({
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <motion.span
-          className="text-lg font-bold text-ink"
+          className={cn("text-lg font-bold", textColor ?? "text-ink")}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
@@ -238,7 +240,7 @@ export function ScoreRing({
           {value}
         </motion.span>
         {label && (
-          <span className="text-[10px] text-ink-muted">{label}</span>
+          <span className={cn("text-[10px]", textColor ? (textColor.includes("white") ? "text-white/80" : textColor) : "text-ink-muted")}>{label}</span>
         )}
       </div>
     </div>
