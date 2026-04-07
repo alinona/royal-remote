@@ -2,6 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─── Fonts (loaded via <link> in layout.tsx) ──────────────────────── */
+:root {
+  --font-sans:    "Cairo", "Inter", system-ui, -apple-system, sans-serif;
+  --font-display: "Cairo", system-ui, sans-serif;
+  --font-mono:    ui-monospace, "Cascadia Code", monospace;
+}
+
 /* ─── Dynamic Color System ─────────────────────────────────────────── */
 :root {
   /* Primary — Deep Indigo */

@@ -1,0 +1,18 @@
+# Build outputs
+saas-web/.next/
+saas-web/node_modules/
+mobile-app/node_modules/
+mobile-app/.expo/
+
+# Environment files
+saas-web/.env
+saas-web/.env.local
+saas-web/.env.production
+
+# TypeScript
+saas-web/next-env.d.ts
+
+# OS
+.DS_Store
+Thumbs.db
+*.tsbuildinfo
