@@ -33,6 +33,7 @@ export default function StudentsPage() {
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [isNewStudentOpen, setIsNewStudentOpen] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState<Student | null>(null);
 
   const filtered = useMemo(() => {
     return studentsList.filter(s => {
@@ -295,13 +296,6 @@ export default function StudentsPage() {
         )}
       </AnimatePresence>
 
-      {/* Add Student Modal */}
-      <AnimatePresence>
-        {showAddModal && (
-          <AddStudentModal onClose={() => setShowAddModal(false)} />
-        )}
-      </AnimatePresence>
-
       {/* Delete Confirm Modal */}
       <AnimatePresence>
         {deleteConfirm && (
@@ -309,7 +303,7 @@ export default function StudentsPage() {
             student={deleteConfirm}
             onClose={() => setDeleteConfirm(null)}
             onConfirm={() => {
-              // In real app: delete student from state/DB
+              setStudentsList(prev => prev.filter(s => s.id !== deleteConfirm.id));
               setDeleteConfirm(null);
             }}
           />
@@ -996,6 +990,54 @@ function EditStudentDrawer({ student, onClose, onSave, existingCodes }: { studen
           </button>
         </div>
       </motion.form>
+    </>
+  );
+}
+
+// ─── Delete Confirm Modal ─────────────────────────────────────────────────────
+
+function DeleteConfirmModal({
+  student,
+  onClose,
+  onConfirm,
+}: {
+  student: Student;
+  onClose: () => void;
+  onConfirm: () => void;
+}) {
+  return (
+    <>
+      <motion.div
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        className="fixed inset-0 z-50 bg-ink/40 backdrop-blur-sm"
+        onClick={onClose}
+      />
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        transition={{ duration: 0.2 }}
+        className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-50 md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:w-80 bg-card rounded-2xl border border-border shadow-card-hover p-6 text-right"
+        dir="rtl"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mb-4 mr-auto ml-0">
+          <Trash2 className="w-5 h-5 text-red-600" />
+        </div>
+        <h3 className="text-base font-bold text-ink">حذف الطالب</h3>
+        <p className="text-sm text-ink-muted mt-2 mb-5">
+          هل أنت متأكد من حذف <span className="font-semibold text-ink">{student.fullName}</span>؟ لا يمكن التراجع عن هذا الإجراء.
+        </p>
+        <div className="flex gap-3">
+          <button onClick={onClose} className="btn-secondary flex-1 text-sm">إلغاء</button>
+          <button
+            onClick={onConfirm}
+            className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-red-500 hover:bg-red-600 text-white font-medium text-sm transition-colors"
+          >
+            حذف
+          </button>
+        </div>
+      </motion.div>
     </>
   );
 }
