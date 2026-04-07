@@ -144,7 +144,24 @@ export default function AttendancePage() {
 
             <div className="flex-1" />
 
-            <motion.button className="btn-secondary gap-2 text-sm" whileTap={{ scale: 0.97 }}>
+            <motion.button
+              onClick={() => {
+                const rows = students.map(s => {
+                  const status = attendance[s.id] ?? "unrecorded";
+                  return `${s.fullName},${s.studentCode},${status}`;
+                });
+                const csv = ["الاسم,الرقم الطلابي,الحضور", ...rows].join("\n");
+                const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `حضور-${selectedClass.name}-${formatDate(selectedDate)}.csv`;
+                a.click();
+                URL.revokeObjectURL(url);
+              }}
+              className="btn-secondary gap-2 text-sm"
+              whileTap={{ scale: 0.97 }}
+            >
               <Download className="w-4 h-4" />
               تصدير
             </motion.button>

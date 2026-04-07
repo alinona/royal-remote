@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Eye, EyeOff, School, Shield, Zap, Lock, Mail } from "lucide-react";
+import { Eye, EyeOff, School, Shield, Zap, Lock, Mail, X, CheckCircle } from "lucide-react";
 import { GeometricMesh, FloatingRing, FloatingDiamond, FloatingHex, GradientOrb } from "@/components/ui/geometric-shapes";
 import { cn } from "@/lib/utils/cn";
 
@@ -13,6 +13,7 @@ export default function AuthPage() {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -160,7 +161,11 @@ export default function AuthPage() {
 
             {/* Remember + Forgot */}
             <div className="flex items-center justify-between">
-              <button type="button" className="text-xs text-primary-600 hover:text-primary-700 hover:underline transition-colors">
+              <button
+                type="button"
+                onClick={() => setShowForgotPassword(true)}
+                className="text-xs text-primary-600 hover:text-primary-700 hover:underline transition-colors"
+              >
                 نسيت كلمة المرور؟
               </button>
               <label className="flex items-center gap-2 cursor-pointer">
@@ -198,6 +203,13 @@ export default function AuthPage() {
             </motion.button>
           </form>
 
+          {/* Forgot Password Modal */}
+          <AnimatePresence>
+            {showForgotPassword && (
+              <ForgotPasswordModal onClose={() => setShowForgotPassword(false)} />
+            )}
+          </AnimatePresence>
+
           {/* Security badges */}
           <div className="flex items-center gap-4 mt-6 justify-center">
             {[
@@ -214,5 +226,111 @@ export default function AuthPage() {
         </motion.div>
       </div>
     </div>
+  );
+}
+
+// ─── Forgot Password Modal ────────────────────────────────────────────────────
+
+function ForgotPasswordModal({ onClose }: { onClose: () => void }) {
+  const [email, setEmail] = useState("");
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
+
+  const handleSend = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim()) return;
+    setSending(true);
+    await new Promise(r => setTimeout(r, 1200));
+    setSending(false);
+    setSent(true);
+  };
+
+  return (
+    <>
+      <motion.div
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        className="fixed inset-0 z-50 bg-ink/50 backdrop-blur-sm"
+        onClick={onClose}
+      />
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 16 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 16 }}
+        transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+        className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-50 max-w-md mx-auto bg-card rounded-2xl border border-border shadow-card-hover overflow-hidden"
+        dir="rtl"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-surface-50 text-ink-muted hover:text-ink">
+            <X className="w-4 h-4" />
+          </button>
+          <h2 className="text-base font-bold text-ink">استعادة كلمة المرور</h2>
+        </div>
+
+        <div className="p-6">
+          {sent ? (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="text-center"
+            >
+              <div className="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
+                <CheckCircle className="w-7 h-7 text-green-600" />
+              </div>
+              <h3 className="text-base font-bold text-ink">تم إرسال الرابط!</h3>
+              <p className="text-sm text-ink-muted mt-2">
+                تم إرسال رابط استعادة كلمة المرور إلى <span className="font-semibold text-ink">{email}</span>. تحقق من بريدك الإلكتروني.
+              </p>
+              <button onClick={onClose} className="btn-primary mt-5 w-full justify-center text-sm">
+                حسنًا
+              </button>
+            </motion.div>
+          ) : (
+            <form onSubmit={handleSend} className="space-y-4">
+              <p className="text-sm text-ink-muted text-right">
+                أدخل بريدك الإلكتروني وسنرسل لك رابطًا لاستعادة كلمة المرور.
+              </p>
+              <div>
+                <label className="text-sm font-medium text-ink block text-right mb-1.5">
+                  البريد الإلكتروني
+                </label>
+                <div className="relative">
+                  <Mail className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-subtle" />
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    placeholder="admin@school.edu.sa"
+                    className="input-base pr-10 text-right w-full"
+                    dir="rtl"
+                    required
+                    autoFocus
+                  />
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <button type="button" onClick={onClose} className="btn-secondary flex-1 justify-center text-sm">
+                  إلغاء
+                </button>
+                <motion.button
+                  type="submit"
+                  disabled={!email.trim() || sending}
+                  className={cn("btn-primary flex-1 justify-center text-sm", (!email.trim() || sending) && "opacity-60 cursor-not-allowed")}
+                  whileTap={{ scale: 0.97 }}
+                >
+                  {sending ? (
+                    <span className="flex items-center gap-2">
+                      <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      إرسال...
+                    </span>
+                  ) : "إرسال الرابط"}
+                </motion.button>
+              </div>
+            </form>
+          )}
+        </div>
+      </motion.div>
+    </>
   );
 }

@@ -77,6 +77,7 @@ export default function ReportsPage() {
   const [selectedReport, setSelectedReport] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
   const [generated, setGenerated] = useState(false);
+  const [activeFilter, setActiveFilter] = useState("الكل");
 
   const handleGenerate = async (id: string) => {
     setSelectedReport(id);
@@ -86,6 +87,10 @@ export default function ReportsPage() {
     setGenerated(true);
     setActiveTab("preview");
   };
+
+  const filteredTemplates = activeFilter === "الكل"
+    ? reportTemplates
+    : reportTemplates.filter(t => t.tags.includes(activeFilter));
 
   return (
     <AppLayout title="التقارير والتحليلات">
@@ -145,7 +150,13 @@ export default function ReportsPage() {
                 {["الكل", "حضور", "درجات", "أداء", "خطر", "سلوك"].map(tag => (
                   <button
                     key={tag}
-                    className="px-3 py-1.5 rounded-xl border border-border bg-surface-50 text-xs font-medium text-ink-muted hover:text-ink hover:bg-surface-100 transition-all"
+                    onClick={() => setActiveFilter(tag)}
+                    className={cn(
+                      "px-3 py-1.5 rounded-xl border text-xs font-medium transition-all",
+                      activeFilter === tag
+                        ? "bg-primary text-white border-primary"
+                        : "border-border bg-surface-50 text-ink-muted hover:text-ink hover:bg-surface-100"
+                    )}
                   >
                     {tag}
                   </button>
@@ -155,7 +166,7 @@ export default function ReportsPage() {
 
             {/* Report Templates Grid */}
             <Stagger className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-              {reportTemplates.map(template => (
+              {filteredTemplates.map(template => (
                 <StaggerItem key={template.id}>
                   <ReportTemplateCard
                     template={template}
@@ -167,7 +178,7 @@ export default function ReportsPage() {
             </Stagger>
           </>
         ) : (
-          <ReportPreview generated={generated} />
+          <ReportPreview generated={generated} onSwitchToTemplates={() => setActiveTab("templates")} />
         )}
       </div>
     </AppLayout>
@@ -223,7 +234,11 @@ function ReportTemplateCard({
             "إنشاء التقرير"
           )}
         </motion.button>
-        <motion.button className="w-8 h-8 rounded-xl border border-border text-ink-muted hover:text-ink flex items-center justify-center" whileTap={{ scale: 0.9 }}>
+        <motion.button
+          onClick={() => alert(`جارٍ تحميل قالب: ${template.title}`)}
+          className="w-8 h-8 rounded-xl border border-border text-ink-muted hover:text-ink flex items-center justify-center"
+          whileTap={{ scale: 0.9 }}
+        >
           <Download className="w-3.5 h-3.5" />
         </motion.button>
       </div>
@@ -233,7 +248,7 @@ function ReportTemplateCard({
 
 // ─── Report Preview ───────────────────────────────────────────────────────────
 
-function ReportPreview({ generated }: { generated: boolean }) {
+function ReportPreview({ generated, onSwitchToTemplates }: { generated: boolean; onSwitchToTemplates: () => void }) {
   if (!generated) {
     return (
       <FadeIn>
@@ -241,7 +256,7 @@ function ReportPreview({ generated }: { generated: boolean }) {
           <BarChart2 className="w-16 h-16 text-ink-subtle mx-auto mb-4 opacity-40" />
           <p className="text-ink-muted text-sm">اختر تقريرًا من القوالب لمعاينته هنا</p>
           <button
-            onClick={() => {}}
+            onClick={onSwitchToTemplates}
             className="btn-primary mt-4 text-sm"
           >
             استعرض القوالب
@@ -261,15 +276,15 @@ function ReportPreview({ generated }: { generated: boolean }) {
       <div className="card-base p-6 bg-gradient-to-l from-primary-50 to-transparent text-right no-print">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <button className="btn-secondary gap-2 text-sm">
+            <button onClick={() => window.print()} className="btn-secondary gap-2 text-sm">
               <Printer className="w-4 h-4" />
               طباعة
             </button>
-            <button className="btn-secondary gap-2 text-sm">
+            <button onClick={() => alert("تم نسخ رابط التقرير إلى الحافظة")} className="btn-secondary gap-2 text-sm">
               <Share2 className="w-4 h-4" />
               مشاركة
             </button>
-            <button className="btn-primary gap-2 text-sm">
+            <button onClick={() => alert("جارٍ تصدير التقرير بصيغة PDF...")} className="btn-primary gap-2 text-sm">
               <Download className="w-4 h-4" />
               تصدير PDF
             </button>

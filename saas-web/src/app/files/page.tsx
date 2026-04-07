@@ -39,6 +39,8 @@ export default function FilesPage() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [previewFile, setPreviewFile] = useState<FileItem | null>(null);
   const [dragOver, setDragOver] = useState(false);
+  const [showNewFolder, setShowNewFolder] = useState(false);
+  const [deleteFile, setDeleteFile] = useState<FileItem | null>(null);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     setUploading(true);
@@ -186,7 +188,11 @@ export default function FilesPage() {
                 <Upload className="w-4 h-4" />
                 رفع ملف
               </motion.button>
-              <motion.button className="btn-primary gap-2 text-sm" whileTap={{ scale: 0.97 }}>
+              <motion.button
+                onClick={() => setShowNewFolder(true)}
+                className="btn-primary gap-2 text-sm"
+                whileTap={{ scale: 0.97 }}
+              >
                 <Plus className="w-4 h-4" />
                 مجلد جديد
               </motion.button>
@@ -243,7 +249,12 @@ export default function FilesPage() {
                 <Stagger className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                   {filteredFiles.map(file => (
                     <StaggerItem key={file.id}>
-                      <FileCard file={file} onClick={() => setPreviewFile(file)} />
+                      <FileCard
+                        file={file}
+                        onClick={() => setPreviewFile(file)}
+                        onDownload={() => alert(`جارٍ تحميل: ${file.name}`)}
+                        onShare={() => alert(`تم نسخ رابط مشاركة: ${file.name}`)}
+                      />
                     </StaggerItem>
                   ))}
                 </Stagger>
@@ -256,6 +267,7 @@ export default function FilesPage() {
             files={filteredFiles}
             onFolderClick={navigateToFolder}
             onFileClick={setPreviewFile}
+            onDeleteFile={setDeleteFile}
           />
         )}
       </div>
@@ -264,6 +276,12 @@ export default function FilesPage() {
       <AnimatePresence>
         {previewFile && (
           <FilePreviewModal file={previewFile} onClose={() => setPreviewFile(null)} />
+        )}
+        {showNewFolder && (
+          <NewFolderModal onClose={() => setShowNewFolder(false)} />
+        )}
+        {deleteFile && (
+          <DeleteFileConfirm file={deleteFile} onClose={() => setDeleteFile(null)} />
         )}
       </AnimatePresence>
     </AppLayout>
@@ -296,7 +314,7 @@ function FolderCard({ folder, onClick }: { folder: Folder; onClick: () => void }
 
 // ─── File Card ────────────────────────────────────────────────────────────────
 
-function FileCard({ file, onClick }: { file: FileItem; onClick: () => void }) {
+function FileCard({ file, onClick, onDownload, onShare }: { file: FileItem; onClick: () => void; onDownload: () => void; onShare: () => void }) {
   const config = fileTypeConfig[file.type];
   return (
     <motion.div
@@ -313,13 +331,13 @@ function FileCard({ file, onClick }: { file: FileItem; onClick: () => void }) {
       <p className="text-[11px] text-ink-subtle mt-0.5">{formatDate(file.updatedAt)}</p>
 
       <div className="flex items-center gap-1 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
-        <button className="p-1 rounded hover:bg-surface-100 text-ink-muted hover:text-ink">
+        <button onClick={e => { e.stopPropagation(); onClick(); }} className="p-1 rounded hover:bg-surface-100 text-ink-muted hover:text-ink" title="معاينة">
           <Eye className="w-3 h-3" />
         </button>
-        <button className="p-1 rounded hover:bg-surface-100 text-ink-muted hover:text-ink">
+        <button onClick={e => { e.stopPropagation(); onDownload(); }} className="p-1 rounded hover:bg-surface-100 text-ink-muted hover:text-ink" title="تحميل">
           <Download className="w-3 h-3" />
         </button>
-        <button className="p-1 rounded hover:bg-surface-100 text-ink-muted hover:text-ink">
+        <button onClick={e => { e.stopPropagation(); onShare(); }} className="p-1 rounded hover:bg-surface-100 text-ink-muted hover:text-ink" title="مشاركة">
           <Share2 className="w-3 h-3" />
         </button>
       </div>
@@ -330,12 +348,13 @@ function FileCard({ file, onClick }: { file: FileItem; onClick: () => void }) {
 // ─── File List View ───────────────────────────────────────────────────────────
 
 function FileListView({
-  folders, files, onFolderClick, onFileClick,
+  folders, files, onFolderClick, onFileClick, onDeleteFile,
 }: {
   folders: Folder[];
   files: FileItem[];
   onFolderClick: (f: Folder) => void;
   onFileClick: (f: FileItem) => void;
+  onDeleteFile: (f: FileItem) => void;
 }) {
   return (
     <FadeIn>
@@ -384,10 +403,18 @@ function FileListView({
                 <span className="text-sm text-ink-muted text-right">{formatFileSize(file.size)}</span>
                 <span className="text-sm text-ink-muted text-right">{formatDate(file.updatedAt)}</span>
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button className="p-1 rounded hover:bg-surface-100 text-ink-muted hover:text-ink">
+                  <button
+                    onClick={e => { e.stopPropagation(); alert(`جارٍ تحميل: ${file.name}`); }}
+                    className="p-1 rounded hover:bg-surface-100 text-ink-muted hover:text-ink"
+                    title="تحميل"
+                  >
                     <Download className="w-3.5 h-3.5" />
                   </button>
-                  <button className="p-1 rounded hover:bg-red-50 text-ink-muted hover:text-danger">
+                  <button
+                    onClick={e => { e.stopPropagation(); onDeleteFile(file); }}
+                    className="p-1 rounded hover:bg-red-50 text-ink-muted hover:text-danger"
+                    title="حذف"
+                  >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -429,11 +456,17 @@ function FilePreviewModal({ file, onClose }: { file: FileItem; onClose: () => vo
           </button>
           <div className="flex-1" />
           <div className="flex items-center gap-2">
-            <button className="btn-secondary text-sm gap-2">
+            <button
+              onClick={() => alert(`تم نسخ رابط مشاركة: ${file.name}`)}
+              className="btn-secondary text-sm gap-2"
+            >
               <Share2 className="w-3.5 h-3.5" />
               مشاركة
             </button>
-            <button className="btn-secondary text-sm gap-2">
+            <button
+              onClick={() => alert(`جارٍ تحميل: ${file.name}`)}
+              className="btn-secondary text-sm gap-2"
+            >
               <Download className="w-3.5 h-3.5" />
               تحميل
             </button>
@@ -458,10 +491,147 @@ function FilePreviewModal({ file, onClose }: { file: FileItem; onClose: () => vo
             <p className="text-sm font-medium text-ink">{file.name}</p>
             <p className="text-xs text-ink-muted mt-1">معاينة الملف غير متاحة في وضع العرض التجريبي</p>
             <div className="flex items-center gap-3 mt-6 justify-center">
-              <button className="btn-secondary text-sm">فتح في محرر جديد</button>
-              <button className="btn-primary text-sm">تحميل الملف</button>
+              <button
+                onClick={() => alert("سيتم فتح الملف في محرر جديد")}
+                className="btn-secondary text-sm"
+              >
+                فتح في محرر جديد
+              </button>
+              <button
+                onClick={() => alert(`جارٍ تحميل: ${file.name}`)}
+                className="btn-primary text-sm"
+              >
+                تحميل الملف
+              </button>
             </div>
           </div>
+        </div>
+      </motion.div>
+    </>
+  );
+}
+
+// ─── New Folder Modal ─────────────────────────────────────────────────────────
+
+function NewFolderModal({ onClose }: { onClose: () => void }) {
+  const [name, setName] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const handleCreate = async () => {
+    if (!name.trim()) return;
+    setSaving(true);
+    await new Promise(r => setTimeout(r, 600));
+    setSaving(false);
+    onClose();
+  };
+
+  return (
+    <>
+      <motion.div
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        className="fixed inset-0 z-50 bg-ink/40 backdrop-blur-sm"
+        onClick={onClose}
+      />
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 16 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 16 }}
+        transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+        className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-50 max-w-sm mx-auto bg-card rounded-2xl border border-border shadow-card-hover overflow-hidden"
+        dir="rtl"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-surface-50 text-ink-muted hover:text-ink">
+            <X className="w-4 h-4" />
+          </button>
+          <h2 className="text-base font-bold text-ink">مجلد جديد</h2>
+        </div>
+        <div className="p-5">
+          <label className="text-sm font-medium text-ink block text-right mb-1.5">اسم المجلد</label>
+          <input
+            value={name}
+            onChange={e => setName(e.target.value)}
+            onKeyDown={e => e.key === "Enter" && handleCreate()}
+            placeholder="مثال: ملفات الفصل الأول"
+            className="input-base text-right w-full"
+            dir="rtl"
+            autoFocus
+          />
+        </div>
+        <div className="flex items-center gap-3 px-5 pb-5">
+          <button onClick={onClose} className="btn-secondary flex-1 justify-center text-sm">إلغاء</button>
+          <motion.button
+            onClick={handleCreate}
+            disabled={!name.trim() || saving}
+            className={cn("btn-primary flex-1 justify-center text-sm", (!name.trim() || saving) && "opacity-60 cursor-not-allowed")}
+            whileTap={{ scale: 0.97 }}
+          >
+            {saving ? (
+              <span className="flex items-center gap-2">
+                <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                إنشاء...
+              </span>
+            ) : "إنشاء"}
+          </motion.button>
+        </div>
+      </motion.div>
+    </>
+  );
+}
+
+// ─── Delete File Confirm ──────────────────────────────────────────────────────
+
+function DeleteFileConfirm({ file, onClose }: { file: FileItem; onClose: () => void }) {
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    await new Promise(r => setTimeout(r, 700));
+    setDeleting(false);
+    onClose();
+  };
+
+  return (
+    <>
+      <motion.div
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        className="fixed inset-0 z-50 bg-ink/40 backdrop-blur-sm"
+        onClick={onClose}
+      />
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 16 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 16 }}
+        transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+        className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-50 max-w-sm mx-auto bg-card rounded-2xl border border-border shadow-card-hover overflow-hidden"
+        dir="rtl"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="p-6 text-center">
+          <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+            <Trash2 className="w-6 h-6 text-red-600" />
+          </div>
+          <h3 className="text-base font-bold text-ink">حذف الملف</h3>
+          <p className="text-sm text-ink-muted mt-2">
+            هل أنت متأكد من حذف <span className="font-semibold text-ink">{file.name}</span>؟ لا يمكن التراجع عن هذا الإجراء.
+          </p>
+        </div>
+        <div className="flex items-center gap-3 px-5 pb-5">
+          <button onClick={onClose} className="btn-secondary flex-1 justify-center text-sm">إلغاء</button>
+          <motion.button
+            onClick={handleDelete}
+            disabled={deleting}
+            className={cn("flex-1 justify-center text-sm h-10 rounded-xl font-medium flex items-center gap-2 bg-red-600 text-white hover:bg-red-700 transition-colors", deleting && "opacity-60 cursor-not-allowed")}
+            whileTap={{ scale: 0.97 }}
+          >
+            {deleting ? (
+              <span className="flex items-center gap-2">
+                <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                حذف...
+              </span>
+            ) : "حذف"}
+          </motion.button>
         </div>
       </motion.div>
     </>
