@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Link from "next/link";
 import {
   Users, GraduationCap, CalendarCheck, BookOpen,
   TrendingUp, AlertTriangle, Zap, ArrowLeft, Activity,
@@ -319,10 +320,10 @@ function AIInsightsCard() {
           ))}
         </div>
 
-        <button className="mt-3 w-full flex items-center justify-center gap-2 text-xs text-primary-600 hover:text-primary-700 py-2 rounded-xl hover:bg-primary-50 transition-colors">
+        <Link href="/ai-assistant" className="mt-3 w-full flex items-center justify-center gap-2 text-xs text-primary-600 hover:text-primary-700 py-2 rounded-xl hover:bg-primary-50 transition-colors">
           <ArrowLeft className="w-3 h-3" />
           عرض جميع التنبيهات
-        </button>
+        </Link>
       </div>
     </FadeIn>
   );
@@ -371,10 +372,10 @@ function AtRiskStudentsCard() {
           ))}
         </div>
 
-        <button className="mt-3 w-full flex items-center justify-center gap-2 text-xs text-primary-600 hover:text-primary-700 py-2 rounded-xl hover:bg-primary-50 transition-colors">
+        <Link href="/students" className="mt-3 w-full flex items-center justify-center gap-2 text-xs text-primary-600 hover:text-primary-700 py-2 rounded-xl hover:bg-primary-50 transition-colors">
           <Eye className="w-3 h-3" />
           عرض جميع الطلاب
-        </button>
+        </Link>
       </div>
     </FadeIn>
   );
@@ -461,10 +462,10 @@ function ActivityFeedCard() {
           })}
         </div>
 
-        <button className="w-full flex items-center justify-center gap-2 text-xs text-primary-600 hover:text-primary-700 py-2 rounded-xl hover:bg-primary-50 transition-colors">
+        <Link href="/activity-log" className="w-full flex items-center justify-center gap-2 text-xs text-primary-600 hover:text-primary-700 py-2 rounded-xl hover:bg-primary-50 transition-colors">
           <BarChart2 className="w-3 h-3" />
           عرض سجل النشاطات الكامل
-        </button>
+        </Link>
       </div>
     </FadeIn>
   );

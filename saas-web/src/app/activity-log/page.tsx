@@ -184,7 +184,24 @@ export default function ActivityLogPage() {
               ))}
             </select>
 
-            <motion.button className="btn-secondary gap-2 text-sm" whileTap={{ scale: 0.97 }}>
+            <motion.button
+              onClick={() => {
+                const rows = filtered.map(log => {
+                  const details = log.details ? JSON.stringify(log.details).replace(/"/g, "'") : "";
+                  return `${log.user.name},${log.user.role},${log.action},${log.resource},"${details}",${new Date(log.createdAt).toLocaleString("ar-SA")}`;
+                });
+                const csv = ["المستخدم,الدور,الإجراء,العنصر,التفاصيل,الوقت", ...rows].join("\n");
+                const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `سجل-النشاطات-${new Date().toLocaleDateString("ar-SA").replace(/\//g, "-")}.csv`;
+                a.click();
+                URL.revokeObjectURL(url);
+              }}
+              className="btn-secondary gap-2 text-sm"
+              whileTap={{ scale: 0.97 }}
+            >
               <Download className="w-4 h-4" />
               تصدير
             </motion.button>

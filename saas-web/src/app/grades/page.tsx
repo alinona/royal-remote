@@ -4,7 +4,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   BookOpen, Plus, Save, ChevronDown, BarChart2,
-  TrendingUp, TrendingDown, Award, Filter,
+  TrendingUp, TrendingDown, Award, Filter, Check,
 } from "lucide-react";
 import { AppLayout } from "@/components/layout/app-layout";
 import { Stagger, StaggerItem, FadeIn } from "@/components/ui/motion";
@@ -34,6 +34,18 @@ export default function GradesPage() {
   const [maxScore, setMaxScore] = useState(100);
   const [grades, setGrades] = useState<Record<string, number>>({});
   const [view, setView] = useState<"entry" | "analytics">("entry");
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  const handleSave = async () => {
+    const count = Object.keys(grades).length;
+    if (count === 0) return;
+    setSaving(true);
+    await new Promise(r => setTimeout(r, 1000));
+    setSaving(false);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 3000);
+  };
 
   const students = mockStudents.filter(s => s.classId === selectedClass.id);
 
@@ -131,9 +143,33 @@ export default function GradesPage() {
                 </button>
               </div>
               <div className="flex-1" />
-              <motion.button className="btn-primary gap-2 text-sm" whileTap={{ scale: 0.97 }}>
-                <Save className="w-4 h-4" />
-                حفظ الدرجات
+              <motion.button
+                onClick={handleSave}
+                disabled={Object.keys(grades).length === 0 || saving}
+                className={cn(
+                  "btn-primary gap-2 text-sm min-w-36 justify-center",
+                  (Object.keys(grades).length === 0 || saving) && "opacity-60 cursor-not-allowed"
+                )}
+                whileTap={{ scale: 0.97 }}
+              >
+                <AnimatePresence mode="wait">
+                  {saving ? (
+                    <motion.div key="saving" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center gap-2">
+                      <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      حفظ...
+                    </motion.div>
+                  ) : saved ? (
+                    <motion.div key="saved" initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="flex items-center gap-2">
+                      <Check className="w-3.5 h-3.5" />
+                      تم الحفظ
+                    </motion.div>
+                  ) : (
+                    <motion.div key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-2">
+                      <Save className="w-4 h-4" />
+                      حفظ الدرجات ({Object.keys(grades).length})
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </motion.button>
             </div>
           </div>
