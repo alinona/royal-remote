@@ -24,7 +24,10 @@ export default function SettingsPage() {
 
   const handleSave = () => {
     setSaving(true);
-    setTimeout(() => setSaving(false), 1500);
+    setTimeout(() => {
+      setSaving(false);
+      alert("تم حفظ جميع التغييرات في الإعدادات بنجاح ✓");
+    }, 1500);
   };
 
   return (

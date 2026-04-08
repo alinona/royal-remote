@@ -23,7 +23,7 @@ const navItems = [
     group: "الإدارة الأكاديمية",
     items: [
       { href: "/students", label: "الطلاب", icon: Users, badge: "1248" },
-      { href: "/classes", label: "الصفوف والمدرسون", icon: GraduationCap, badge: null },
+      { href: "/classes", label: "الشعب والمدرسون", icon: GraduationCap, badge: null },
       { href: "/attendance", label: "الحضور والغياب", icon: CalendarCheck, badge: null },
       { href: "/grades", label: "الدرجات والتقييم", icon: BookOpen, badge: null },
     ],

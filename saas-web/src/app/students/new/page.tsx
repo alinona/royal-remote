@@ -21,6 +21,7 @@ export default function NewStudentPage() {
     setSaving(true);
     setTimeout(() => {
       setSaving(false);
+      alert("تم حفظ بيانات الطالب بنجاح في النظام");
       router.push("/students");
     }, 1500);
   };
@@ -115,11 +116,11 @@ export default function NewStudentPage() {
                   </select>
                 </div>
                 <div className="text-right">
-                  <label className="block text-sm font-medium text-ink mb-1.5">الفصل</label>
+                  <label className="block text-sm font-medium text-ink mb-1.5">الشعبة</label>
                   <select className="input-base text-right" dir="rtl">
-                    <option value="A">أ</option>
-                    <option value="B">ب</option>
-                    <option value="C">ج</option>
+                    <option value="A">شعبة أ</option>
+                    <option value="B">شعبة ب</option>
+                    <option value="C">شعبة ج</option>
                   </select>
                 </div>
               </div>

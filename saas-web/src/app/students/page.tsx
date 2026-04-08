@@ -189,11 +189,11 @@ export default function StudentsPage() {
                     ]}
                   />
                   <FilterSelect
-                    label="الصف"
+                    label="الشعبة"
                     value={classFilter}
                     onChange={setClassFilter}
                     options={[
-                      { value: "all", label: "جميع الصفوف" },
+                      { value: "all", label: "جميع الشعب" },
                       ...mockClasses.map(c => ({ value: c.id, label: c.name })),
                     ]}
                   />

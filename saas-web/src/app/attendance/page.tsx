@@ -144,7 +144,20 @@ export default function AttendancePage() {
 
             <div className="flex-1" />
 
-            <motion.button className="btn-secondary gap-2 text-sm" whileTap={{ scale: 0.97 }}>
+            <motion.button 
+              className="btn-secondary gap-2 text-sm" 
+              whileTap={{ scale: 0.97 }}
+              onClick={() => {
+                const csvContent = "data:text/csv;charset=utf-8," + Object.entries(attendance).map(([id, status]) => `${id},${status}`).join("\n");
+                const encodedUri = encodeURI(csvContent);
+                const link = document.createElement("a");
+                link.setAttribute("href", encodedUri);
+                link.setAttribute("download", `attendance_${formatDate(selectedDate, "yyyy-MM-dd")}.csv`);
+                document.body.appendChild(link);
+                link.click();
+                alert("تم تصدير تقرير الحضور بنجاح");
+              }}
+            >
               <Download className="w-4 h-4" />
               تصدير
             </motion.button>

@@ -71,7 +71,7 @@ const extendedLogs: ActivityLog[] = [
     user: { id: "u2", name: "فاطمة العتيبي", role: "teacher" },
     action: "uploaded",
     resource: "file",
-    details: { fileName: "خطة الدرس - الفصل الثاني.docx", size: "245 KB" },
+    details: { fileName: "خطة الدرس - الشعبة الثانية.docx", size: "245 KB" },
     schoolId: "s1",
     createdAt: new Date(Date.now() - 4 * 60 * 60000),
   },
@@ -187,7 +187,16 @@ export default function ActivityLogPage() {
             <motion.button
               className="btn-secondary gap-2 text-sm"
               whileTap={{ scale: 0.97 }}
-              onClick={() => alert(`تصدير ${filtered.length} سجل إلى CSV`)}
+              onClick={() => {
+                const csvContent = "data:text/csv;charset=utf-8," + filtered.map(l => `${l.user.name},${l.action},${l.resource},${l.createdAt}`).join("\n");
+                const encodedUri = encodeURI(csvContent);
+                const link = document.createElement("a");
+                link.setAttribute("href", encodedUri);
+                link.setAttribute("download", "activity_log.csv");
+                document.body.appendChild(link);
+                link.click();
+                alert(`تم تصدير ${filtered.length} سجل بنجاح إلى ملف CSV`);
+              }}
             >
               <Download className="w-4 h-4" />
               تصدير

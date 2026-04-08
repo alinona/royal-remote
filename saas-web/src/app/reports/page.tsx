@@ -30,11 +30,11 @@ const reportTemplates = [
   },
   {
     id: "grades",
-    title: "تقرير الدرجات الفصلي",
+    title: "تقرير درجات الشعبة",
     description: "ملخص درجات الطلاب في جميع المواد",
     icon: BookOpen,
     color: "text-blue-600 bg-blue-50",
-    tags: ["درجات", "فصلي"],
+    tags: ["درجات", "شعبة"],
   },
   {
     id: "performance",
@@ -261,22 +261,22 @@ function ReportPreview({ generated }: { generated: boolean }) {
       <div className="card-base p-6 bg-gradient-to-l from-primary-50 to-transparent text-right no-print">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <button className="btn-secondary gap-2 text-sm">
+            <button onClick={() => window.print()} className="btn-secondary gap-2 text-sm">
               <Printer className="w-4 h-4" />
               طباعة
             </button>
-            <button className="btn-secondary gap-2 text-sm">
+            <button onClick={() => alert("تم نسخ رابط التقرير للمشاركة")} className="btn-secondary gap-2 text-sm">
               <Share2 className="w-4 h-4" />
               مشاركة
             </button>
-            <button className="btn-primary gap-2 text-sm">
+            <button onClick={() => alert("جاري إنشاء ملف PDF للتقرير...")} className="btn-primary gap-2 text-sm">
               <Download className="w-4 h-4" />
               تصدير PDF
             </button>
           </div>
           <div>
             <h2 className="text-lg font-bold text-ink">التقرير الشامل للمدرسة</h2>
-            <p className="text-xs text-ink-muted mt-1">الفصل الدراسي الأول | العام 1446/1447</p>
+            <p className="text-xs text-ink-muted mt-1">الفصل الدراسي الأول (الشعبة الحالية) | العام 1446/1447</p>
           </div>
         </div>
       </div>

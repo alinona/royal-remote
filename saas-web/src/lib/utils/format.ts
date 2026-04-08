@@ -104,8 +104,8 @@ export const behaviorTypeLabel: Record<string, string> = {
 export const gradeTypeLabel: Record<string, string> = {
   quiz: "اختبار قصير",
   homework: "واجب منزلي",
-  midterm: "اختبار منتصف الفصل",
-  final: "اختبار نهاية الفصل",
+  midterm: "اختبار منتصف الشعبة/الترم",
+  final: "اختبار نهاية الشعبة/الترم",
   project: "مشروع",
   participation: "مشاركة صفية",
 };

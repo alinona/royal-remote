@@ -225,7 +225,7 @@ function GradeDistributionCard() {
       <div className="card-base p-5">
         <div className="text-right mb-2">
           <h3 className="text-sm font-semibold text-ink">توزيع الدرجات</h3>
-          <p className="text-xs text-ink-muted">الفصل الحالي</p>
+          <p className="text-xs text-ink-muted">الشعبة الحالية</p>
         </div>
         <GradeDonutChart data={mockGradeDistribution} />
         <div className="space-y-1.5 mt-2">

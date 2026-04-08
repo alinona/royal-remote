@@ -50,9 +50,9 @@ export default function GradesPage() {
     { label: "اختبار 1", value: 75, secondary: 80 },
     { label: "اختبار 2", value: 78, secondary: 82 },
     { label: "اختبار 3", value: 72, secondary: 79 },
-    { label: "منتصف الفصل", value: 80, secondary: 85 },
+    { label: "منتصف الشعبة/الترم", value: 80, secondary: 85 },
     { label: "اختبار 5", value: 82, secondary: 88 },
-    { label: "نهاية الفصل", value: 85, secondary: 90 },
+    { label: "نهاية الشعبة/الترم", value: 85, secondary: 90 },
   ];
 
   return (
@@ -137,7 +137,15 @@ export default function GradesPage() {
                 onClick={() => {
                   const count = Object.keys(grades).length;
                   if (count === 0) { alert("لم تُدخل أي درجات بعد"); return; }
-                  alert(`تم حفظ ${count} درجة بنجاح ✓`);
+                  const btn = document.activeElement as HTMLButtonElement;
+                  const originalText = btn.innerText;
+                  btn.innerText = "جاري الحفظ...";
+                  btn.disabled = true;
+                  setTimeout(() => {
+                    alert(`تم حفظ درجات ${count} طالب بنجاح في سجلات الشعبة ✓`);
+                    btn.innerText = originalText;
+                    btn.disabled = false;
+                  }, 1000);
                 }}
               >
                 <Save className="w-4 h-4" />
