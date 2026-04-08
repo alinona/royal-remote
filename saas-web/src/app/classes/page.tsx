@@ -33,7 +33,7 @@ export default function ClassesPage() {
     <AppLayout title="الصفوف والمدرسون">
       <div className="space-y-6">
         {/* Stats */}
-        <Stagger className="grid grid-cols-4 gap-4">
+        <Stagger className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
             { label: "إجمالي الصفوف", value: mockClasses.length, icon: GraduationCap, color: "text-primary-600 bg-primary-50" },
             { label: "إجمالي المدرسين", value: mockTeachers.length, icon: Users, color: "text-blue-600 bg-blue-50" },

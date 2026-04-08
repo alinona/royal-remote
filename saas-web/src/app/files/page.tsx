@@ -112,7 +112,7 @@ export default function FilesPage() {
         </AnimatePresence>
 
         {/* Storage stats */}
-        <Stagger className="grid grid-cols-3 gap-4">
+        <Stagger className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[
             { label: "المساحة المستخدمة", value: formatFileSize(totalSize), icon: HardDrive, color: "text-primary-600 bg-primary-50" },
             { label: "إجمالي الملفات", value: mockFiles.length.toString(), icon: File, color: "text-blue-600 bg-blue-50" },

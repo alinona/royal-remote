@@ -1,9 +1,0 @@
-{
-  "buildCommand": "cd saas-web && npm install && npm run build",
-  "outputDirectory": "saas-web/.next",
-  "installCommand": "cd saas-web && npm install",
-  "framework": "nextjs",
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/$1" }
-  ]
-}
