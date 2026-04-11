@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search, Plus, Filter, Download, Upload, Eye, Edit2,
@@ -24,7 +24,26 @@ import type { Student, StudentStatus } from "@/types";
 // ─── Students Page ────────────────────────────────────────────────────────────
 
 export default function StudentsPage() {
-  const [students, setStudents] = useState<Student[]>(_mockStudents);
+  const [students, setStudents] = useState<Student[]>(() => {
+    if (typeof window === 'undefined') return _mockStudents;
+    try {
+      const stored = localStorage.getItem('eduflow_students');
+      if (stored) {
+        return JSON.parse(stored).map((s: any) => ({
+          ...s,
+          dateOfBirth: new Date(s.dateOfBirth),
+          enrollmentDate: new Date(s.enrollmentDate),
+          createdAt: new Date(s.createdAt),
+          updatedAt: new Date(s.updatedAt),
+        }));
+      }
+    } catch {}
+    return _mockStudents;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('eduflow_students', JSON.stringify(students));
+  }, [students]);
   const [view, setView] = useState<"grid" | "list">("list");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StudentStatus | "all">("all");
