@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   BookOpen, Plus, Save, Check, ChevronDown, BarChart2,
@@ -32,7 +32,28 @@ export default function GradesPage() {
   const [selectedSubject, setSelectedSubject] = useState(subjects[0]);
   const [selectedType, setSelectedType] = useState<GradeType>("quiz");
   const [maxScore, setMaxScore] = useState(100);
-  const [grades, setGrades] = useState<Record<string, number>>({});
+  const [allGrades, setAllGrades] = useState<Record<string, Record<string, number>>>(() => {
+    if (typeof window === 'undefined') return {};
+    try {
+      const stored = localStorage.getItem('eduflow_grades');
+      if (stored) return JSON.parse(stored);
+    } catch {}
+    return {};
+  });
+
+  useEffect(() => {
+    localStorage.setItem('eduflow_grades', JSON.stringify(allGrades));
+  }, [allGrades]);
+
+  const gradesKey = `${selectedClass.id}_${selectedSubject.id}_${selectedType}`;
+  const grades = allGrades[gradesKey] || {};
+  const setGrades = (updater: Record<string, number> | ((prev: Record<string, number>) => Record<string, number>)) => {
+    setAllGrades(prev => {
+      const current = prev[gradesKey] || {};
+      const next = typeof updater === 'function' ? updater(current) : updater;
+      return { ...prev, [gradesKey]: next };
+    });
+  };
   const [view, setView] = useState<"entry" | "analytics">("entry");
   const [savingGrades, setSavingGrades] = useState(false);
   const [savedGrades, setSavedGrades] = useState(false);

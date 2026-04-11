@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { mockClasses } from "@/lib/utils/mock-data";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowRight, Save, User,
@@ -37,6 +38,39 @@ export default function NewStudentPage() {
     e.preventDefault();
     setSaving(true);
     setTimeout(() => {
+      // Persist the new student to localStorage so students/page.tsx can pick it up
+      try {
+        const cls = mockClasses.find(c => c.grade === Number(form.classGrade) && c.section === form.section) ?? mockClasses[0];
+        const newStudent = {
+          id: `s${Date.now()}`,
+          studentCode: `STD${Date.now().toString().slice(-5)}`,
+          nationalId: form.nationalId,
+          firstName: form.firstName,
+          lastName: form.lastName,
+          fullName: `${form.firstName} ${form.lastName}`,
+          gender: form.gender,
+          dateOfBirth: new Date(form.dateOfBirth || '2010-01-01').toISOString(),
+          address: form.address,
+          classId: cls.id,
+          class: cls,
+          status: 'active',
+          enrollmentDate: new Date().toISOString(),
+          schoolId: 's1',
+          guardianName: form.guardianName,
+          guardianRelation: form.guardianRelation,
+          guardianPhone: form.guardianPhone,
+          gpa: undefined,
+          attendanceRate: undefined,
+          behaviorScore: undefined,
+          riskLevel: 'low',
+          tags: [],
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        const existingRaw = localStorage.getItem('eduflow_students');
+        const existing = existingRaw ? JSON.parse(existingRaw) : [];
+        localStorage.setItem('eduflow_students', JSON.stringify([newStudent, ...existing]));
+      } catch {}
       setSaving(false);
       setSaved(true);
       setTimeout(() => router.push("/students"), 1800);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   GraduationCap, Users, BookOpen, Plus, Eye, Edit2,
@@ -18,8 +18,30 @@ import type { ClassSection, Teacher } from "@/types";
 
 export default function ClassesPage() {
   const [activeTab, setActiveTab] = useState<"classes" | "teachers">("classes");
-  const [classes, setClasses] = useState<ClassSection[]>(_mockClasses);
-  const [teachers, setTeachers] = useState<Teacher[]>(_mockTeachers);
+  const [classes, setClasses] = useState<ClassSection[]>(() => {
+    if (typeof window === 'undefined') return _mockClasses;
+    try {
+      const stored = localStorage.getItem('eduflow_classes');
+      if (stored) return JSON.parse(stored);
+    } catch {}
+    return _mockClasses;
+  });
+  const [teachers, setTeachers] = useState<Teacher[]>(() => {
+    if (typeof window === 'undefined') return _mockTeachers;
+    try {
+      const stored = localStorage.getItem('eduflow_teachers');
+      if (stored) return JSON.parse(stored);
+    } catch {}
+    return _mockTeachers;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('eduflow_classes', JSON.stringify(classes));
+  }, [classes]);
+
+  useEffect(() => {
+    localStorage.setItem('eduflow_teachers', JSON.stringify(teachers));
+  }, [teachers]);
   const [showNewModal, setShowNewModal] = useState(false);
   const [viewClass, setViewClass] = useState<ClassSection | null>(null);
   const [editClass, setEditClass] = useState<ClassSection | null>(null);

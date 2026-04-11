@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   CalendarCheck, ChevronLeft, ChevronRight, Check, X,
@@ -20,8 +20,33 @@ type AttendanceMap = Record<string, AttendanceStatus>;
 export default function AttendancePage() {
   const [selectedClass, setSelectedClass] = useState(mockClasses[0]);
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [attendance, setAttendance] = useState<AttendanceMap>({});
+  const [allAttendance, setAllAttendance] = useState<Record<string, AttendanceMap>>(() => {
+    if (typeof window === 'undefined') return {};
+    try {
+      const stored = localStorage.getItem('eduflow_attendance');
+      if (stored) return JSON.parse(stored);
+    } catch {}
+    return {};
+  });
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    localStorage.setItem('eduflow_attendance', JSON.stringify(allAttendance));
+  }, [allAttendance]);
+
+  const attendanceKey = useMemo(() => {
+    const d = selectedDate;
+    return `${selectedClass.id}_${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }, [selectedClass.id, selectedDate]);
+
+  const attendance = allAttendance[attendanceKey] || {};
+  const setAttendance = (updater: AttendanceMap | ((prev: AttendanceMap) => AttendanceMap)) => {
+    setAllAttendance(prev => {
+      const current = prev[attendanceKey] || {};
+      const next = typeof updater === 'function' ? updater(current) : updater;
+      return { ...prev, [attendanceKey]: next };
+    });
+  };
   const [saved, setSaved] = useState(false);
   const [exportDone, setExportDone] = useState(false);
 
@@ -61,7 +86,7 @@ export default function AttendancePage() {
               {mockClasses.map(cls => (
                 <motion.button
                   key={cls.id}
-                  onClick={() => { setSelectedClass(cls); setAttendance({}); setSaved(false); }}
+                  onClick={() => { setSelectedClass(cls); setSaved(false); }}
                   className={cn(
                     "px-4 py-2 rounded-xl text-sm font-medium transition-all",
                     selectedClass.id === cls.id
