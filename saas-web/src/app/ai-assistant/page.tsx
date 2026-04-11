@@ -100,28 +100,64 @@ export default function AIAssistantPage() {
     setInput("");
     setLoading(true);
 
-    // Simulate AI response
-    await new Promise(r => setTimeout(r, 1500));
+    try {
+      // Call real AI API
+      const res = await fetch("/api/ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: content,
+          history: messages.slice(-10).map(m => ({ role: m.role, content: m.content })),
+          context: {
+            school: "مدرسة منارات المستقبل النموذجية",
+            totalStudents: 1248,
+            avgAttendance: "92.4%",
+            avgGPA: "78.6%",
+            atRiskCount: 34,
+            currentYear: "1446/1447",
+          },
+        }),
+      });
 
-    const responses: Record<string, string> = {
-      "تحليل": "**تحليل الأداء الأكاديمي - الشعبة الحالية 1446/1447**\n\nبعد تحليل شامل لبيانات 1,248 طالبًا:\n\n**الطلاب في خطر مرتفع (34 طالبًا):**\n• 18 طالبًا بسبب ضعف الحضور (<75%)\n• 12 طالبًا بسبب انخفاض الدرجات (<50%)\n• 4 طلاب بسبب مشاكل سلوكية متكررة\n\n**التوصيات الفورية:**\n1. تنظيم جلسات دعم أكاديمي للطلاب المتعثرين\n2. التواصل مع أولياء الأمور خلال 48 ساعة\n3. مراجعة خطة التدريس لمواد الضعف\n\n**التنبؤ:** إذا لم يتم التدخل، سيرسب 28 طالبًا في نهاية الشعبة بنسبة ثقة 84%",
-      "اختبار": "**اختبار الرياضيات - الكسور - الصف الأول**\n\n*المدة: 45 دقيقة | الدرجة الكاملة: 40*\n\n**القسم الأول: أسئلة الاختيار من متعدد (20 درجة)**\n\n1. ما هو الكسر الذي يمثل نصف الكل؟\n   أ) 1/4  ب) 1/2  ج) 2/3  د) 3/4\n\n2. أيٌّ من الكسور التالية أكبر من 1/2؟\n   أ) 1/3  ب) 2/5  ج) 3/4  د) 1/4\n\n**القسم الثاني: أسئلة قصيرة (12 درجة)**\n\n1. رُسمت 6 نقاط على خط مستقيم، ما الكسر الذي يمثل 4 نقاط منها؟\n2. أحمد أكل 3/8 من البيتزا. كم جزءًا تبقى؟\n\n**القسم الثالث: مسائل تطبيقية (8 درجات)**\n\nقسم 24 تفاحة على 6 أطفال بالتساوي...",
-      "تقرير": "**التقرير التحليلي الشامل - الشعبة الحالية**\n\n📊 **الملخص التنفيذي:**\n- متوسط الحضور: 92.4% (أعلى من المستهدف 90%)\n- متوسط الدرجات: 78.6% (ارتفاع 2.3% عن الشعبة السابقة)\n- نسبة الطلاب المتفوقين: 25.2%\n\n📈 **المواد الأفضل أداءً:**\n1. التربية الإسلامية: 87.3%\n2. اللغة العربية: 82.1%\n3. الرياضيات: 74.5%\n\n⚠️ **المواد التي تحتاج تحسينًا:**\n1. العلوم: 68.2%\n2. الاجتماعيات: 71.4%",
-    };
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
+      }
 
-    const key = Object.keys(responses).find(k => content.includes(k)) ?? "default";
-    const responseContent = responses[key] ?? `شكرًا على سؤالك! بناءً على بيانات المدرسة:\n\n${content}\n\nيمكنني تقديم تحليل أعمق. هل تريد بيانات أكثر تفصيلًا؟`;
+      const json = await res.json();
+      const responseContent: string = json?.data?.content
+        ?? "عذرًا، حدث خطأ في الحصول على الإجابة. حاول مرة أخرى.";
 
-    const assistantMsg: Message = {
-      id: (Date.now() + 1).toString(),
-      role: "assistant",
-      content: responseContent,
-      timestamp: new Date(),
-      type: "insight",
-    };
+      const assistantMsg: Message = {
+        id: (Date.now() + 1).toString(),
+        role: "assistant",
+        content: responseContent,
+        timestamp: new Date(),
+        type: "insight",
+      };
 
-    setMessages(prev => [...prev, assistantMsg]);
-    setLoading(false);
+      setMessages(prev => [...prev, assistantMsg]);
+    } catch {
+      // Fallback to local responses if API unavailable
+      const responses: Record<string, string> = {
+        "تحليل": "**تحليل الأداء الأكاديمي - الشعبة الحالية 1446/1447**\n\nبعد تحليل شامل لبيانات 1,248 طالبًا:\n\n**الطلاب في خطر مرتفع (34 طالبًا):**\n• 18 طالبًا بسبب ضعف الحضور (<75%)\n• 12 طالبًا بسبب انخفاض الدرجات (<50%)\n• 4 طلاب بسبب مشاكل سلوكية متكررة\n\n**التوصيات الفورية:**\n1. تنظيم جلسات دعم أكاديمي للطلاب المتعثرين\n2. التواصل مع أولياء الأمور خلال 48 ساعة\n3. مراجعة خطة التدريس لمواد الضعف",
+        "اختبار": "**اختبار الرياضيات - الكسور - الصف الأول**\n\n*المدة: 45 دقيقة | الدرجة الكاملة: 40*\n\n**القسم الأول: الاختيار من متعدد (20 درجة)**\n\n1. ما هو الكسر الذي يمثل نصف الكل؟ أ) 1/4  ب) 1/2  ج) 2/3  د) 3/4\n\n**القسم الثاني: أسئلة قصيرة (12 درجة)**\n\n**القسم الثالث: مسائل تطبيقية (8 درجات)**",
+        "تقرير": "**التقرير التحليلي الشامل**\n\n📊 **الملخص:**\n- متوسط الحضور: 92.4%\n- متوسط الدرجات: 78.6%\n- المتفوقون: 25.2%\n\n📈 **الأفضل أداءً:**\n1. التربية الإسلامية: 87.3%\n2. اللغة العربية: 82.1%",
+      };
+      const key = Object.keys(responses).find(k => content.includes(k)) ?? "";
+      const fallbackContent = responses[key]
+        ?? "عذرًا، لا يمكن الاتصال بخدمة الذكاء الاصطناعي حاليًا. يرجى التحقق من إعداد ANTHROPIC_API_KEY والمحاولة مرة أخرى.";
+
+      const errorMsg: Message = {
+        id: (Date.now() + 1).toString(),
+        role: "assistant",
+        content: fallbackContent,
+        timestamp: new Date(),
+        type: "text",
+      };
+      setMessages(prev => [...prev, errorMsg]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const copyMessage = async (id: string, content: string) => {
