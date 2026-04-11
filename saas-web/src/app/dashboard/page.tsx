@@ -299,6 +299,7 @@ function AIInsightsCard() {
           {mockAIInsights.map((insight) => (
             <motion.div
               key={insight.id}
+              onClick={() => router.push("/ai-assistant")}
               className={cn(
                 "p-3 rounded-xl border text-right cursor-pointer",
                 "hover:shadow-card transition-all duration-200",
@@ -355,6 +356,7 @@ function AtRiskStudentsCard() {
           {atRisk.map((student) => (
             <motion.div
               key={student.id}
+              onClick={() => router.push(`/students?id=${student.id}`)}
               className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-surface-50 transition-colors cursor-pointer"
               whileHover={{ x: -2 }}
             >
