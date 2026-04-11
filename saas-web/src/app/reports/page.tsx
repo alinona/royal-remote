@@ -4,7 +4,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import {
   BarChart2, Download, FileText, TrendingUp, Users,
-  CalendarCheck, BookOpen, Filter, Printer, Share2,
+  CalendarCheck, BookOpen, Filter, Printer, Share2, Check,
 } from "lucide-react";
 import { AppLayout } from "@/components/layout/app-layout";
 import { Stagger, StaggerItem, FadeIn } from "@/components/ui/motion";
@@ -70,6 +70,8 @@ const reportTemplates = [
   },
 ];
 
+const filterTags = ["الكل", "حضور", "درجات", "أداء", "خطر", "سلوك", "شامل"];
+
 // ─── Reports Page ─────────────────────────────────────────────────────────────
 
 export default function ReportsPage() {
@@ -77,6 +79,10 @@ export default function ReportsPage() {
   const [selectedReport, setSelectedReport] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
   const [generated, setGenerated] = useState(false);
+  const [activeFilter, setActiveFilter] = useState("الكل");
+  const [downloadedReports, setDownloadedReports] = useState<Set<string>>(new Set());
+  const [generatedCount, setGeneratedCount] = useState(24);
+  const [shareSuccess, setShareSuccess] = useState(false);
 
   const handleGenerate = async (id: string) => {
     setSelectedReport(id);
@@ -84,8 +90,44 @@ export default function ReportsPage() {
     await new Promise(r => setTimeout(r, 2000));
     setGenerating(false);
     setGenerated(true);
+    setGeneratedCount(c => c + 1);
     setActiveTab("preview");
   };
+
+  const handleDownloadTemplate = (id: string) => {
+    setDownloadedReports(prev => new Set([...prev, id]));
+    const template = reportTemplates.find(t => t.id === id);
+    // Generate CSV-like download for demo
+    const content = `تقرير: ${template?.title}\nتاريخ الإنشاء: ${new Date().toLocaleDateString("ar-SA")}\n\nالبيانات التفصيلية:\n${mockStudents.map(s => `${s.fullName},${s.class.name},${s.gpa}%,${s.attendanceRate}%`).join("\n")}`;
+    const blob = new Blob(["\ufeff" + content], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${template?.title ?? "تقرير"}_${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    setTimeout(() => {
+      setDownloadedReports(prev => { const n = new Set(prev); n.delete(id); return n; });
+    }, 3000);
+  };
+
+  const handleExportPDF = () => {
+    window.print();
+  };
+
+  const handleShareReport = () => {
+    const url = window.location.href;
+    navigator.clipboard.writeText(url).then(() => {
+      setShareSuccess(true);
+      setTimeout(() => setShareSuccess(false), 2500);
+    });
+  };
+
+  const filteredTemplates = activeFilter === "الكل"
+    ? reportTemplates
+    : reportTemplates.filter(t => t.tags.some(tag => tag === activeFilter || t.title.includes(activeFilter)));
 
   return (
     <AppLayout title="التقارير والتحليلات">
@@ -93,7 +135,7 @@ export default function ReportsPage() {
         {/* Summary KPIs */}
         <Stagger className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
-            { label: "التقارير المُنشأة هذا الشهر", value: "24", icon: FileText, color: "text-blue-600 bg-blue-50" },
+            { label: "التقارير المُنشأة هذا الشهر", value: generatedCount.toString(), icon: FileText, color: "text-blue-600 bg-blue-50" },
             { label: "آخر تحديث", value: "اليوم", icon: CalendarCheck, color: "text-green-600 bg-green-50" },
             { label: "التقارير المشاركة", value: "8", icon: Share2, color: "text-purple-600 bg-purple-50" },
             { label: "الصادرة للطباعة", value: "12", icon: Printer, color: "text-amber-600 bg-amber-50" },
@@ -142,10 +184,16 @@ export default function ReportsPage() {
                   <Filter className="w-4 h-4" />
                   تصفية:
                 </span>
-                {["الكل", "حضور", "درجات", "أداء", "خطر", "سلوك"].map(tag => (
+                {filterTags.map(tag => (
                   <button
                     key={tag}
-                    className="px-3 py-1.5 rounded-xl border border-border bg-surface-50 text-xs font-medium text-ink-muted hover:text-ink hover:bg-surface-100 transition-all"
+                    onClick={() => setActiveFilter(tag)}
+                    className={cn(
+                      "px-3 py-1.5 rounded-xl border text-xs font-medium transition-all",
+                      activeFilter === tag
+                        ? "bg-primary text-white border-primary shadow-glow"
+                        : "border-border bg-surface-50 text-ink-muted hover:text-ink hover:bg-surface-100"
+                    )}
                   >
                     {tag}
                   </button>
@@ -155,19 +203,36 @@ export default function ReportsPage() {
 
             {/* Report Templates Grid */}
             <Stagger className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-              {reportTemplates.map(template => (
+              {filteredTemplates.map(template => (
                 <StaggerItem key={template.id}>
                   <ReportTemplateCard
                     template={template}
                     onGenerate={() => handleGenerate(template.id)}
+                    onDownload={() => handleDownloadTemplate(template.id)}
                     generating={generating && selectedReport === template.id}
+                    downloaded={downloadedReports.has(template.id)}
                   />
                 </StaggerItem>
               ))}
             </Stagger>
+
+            {filteredTemplates.length === 0 && (
+              <FadeIn>
+                <div className="card-base p-12 text-center">
+                  <BarChart2 className="w-12 h-12 text-ink-subtle mx-auto mb-3 opacity-40" />
+                  <p className="text-ink-muted text-sm">لا توجد تقارير تطابق هذا التصنيف</p>
+                </div>
+              </FadeIn>
+            )}
           </>
         ) : (
-          <ReportPreview generated={generated} />
+          <ReportPreview
+            generated={generated}
+            onBrowseTemplates={() => setActiveTab("templates")}
+            onExportPDF={handleExportPDF}
+            onShare={handleShareReport}
+            shareSuccess={shareSuccess}
+          />
         )}
       </div>
     </AppLayout>
@@ -177,17 +242,17 @@ export default function ReportsPage() {
 // ─── Report Template Card ─────────────────────────────────────────────────────
 
 function ReportTemplateCard({
-  template,
-  onGenerate,
-  generating,
+  template, onGenerate, onDownload, generating, downloaded,
 }: {
   template: typeof reportTemplates[0];
   onGenerate: () => void;
+  onDownload: () => void;
   generating: boolean;
+  downloaded: boolean;
 }) {
   return (
     <motion.div
-      className="card-base p-5 hover:shadow-card-hover cursor-pointer text-right group"
+      className="card-base p-5 hover:shadow-card-hover text-right group"
       whileHover={{ y: -2 }}
     >
       <div className="flex items-start justify-between mb-4">
@@ -223,8 +288,18 @@ function ReportTemplateCard({
             "إنشاء التقرير"
           )}
         </motion.button>
-        <motion.button className="w-8 h-8 rounded-xl border border-border text-ink-muted hover:text-ink flex items-center justify-center" whileTap={{ scale: 0.9 }}>
-          <Download className="w-3.5 h-3.5" />
+        <motion.button
+          onClick={onDownload}
+          className={cn(
+            "w-8 h-8 rounded-xl border flex items-center justify-center transition-colors",
+            downloaded
+              ? "border-green-300 bg-green-50 text-green-600"
+              : "border-border text-ink-muted hover:text-ink hover:bg-surface-50"
+          )}
+          whileTap={{ scale: 0.9 }}
+          title="تحميل مباشر"
+        >
+          {downloaded ? <Check className="w-3.5 h-3.5" /> : <Download className="w-3.5 h-3.5" />}
         </motion.button>
       </div>
     </motion.div>
@@ -233,7 +308,15 @@ function ReportTemplateCard({
 
 // ─── Report Preview ───────────────────────────────────────────────────────────
 
-function ReportPreview({ generated }: { generated: boolean }) {
+function ReportPreview({
+  generated, onBrowseTemplates, onExportPDF, onShare, shareSuccess,
+}: {
+  generated: boolean;
+  onBrowseTemplates: () => void;
+  onExportPDF: () => void;
+  onShare: () => void;
+  shareSuccess: boolean;
+}) {
   if (!generated) {
     return (
       <FadeIn>
@@ -241,7 +324,7 @@ function ReportPreview({ generated }: { generated: boolean }) {
           <BarChart2 className="w-16 h-16 text-ink-subtle mx-auto mb-4 opacity-40" />
           <p className="text-ink-muted text-sm">اختر تقريرًا من القوالب لمعاينته هنا</p>
           <button
-            onClick={() => {}}
+            onClick={onBrowseTemplates}
             className="btn-primary mt-4 text-sm"
           >
             استعرض القوالب
@@ -261,15 +344,21 @@ function ReportPreview({ generated }: { generated: boolean }) {
       <div className="card-base p-6 bg-gradient-to-l from-primary-50 to-transparent text-right no-print">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <button onClick={() => window.print()} className="btn-secondary gap-2 text-sm">
+            <button onClick={onExportPDF} className="btn-secondary gap-2 text-sm">
               <Printer className="w-4 h-4" />
               طباعة
             </button>
-            <button onClick={() => alert("تم نسخ رابط التقرير للمشاركة")} className="btn-secondary gap-2 text-sm">
-              <Share2 className="w-4 h-4" />
-              مشاركة
+            <button
+              onClick={onShare}
+              className={cn(
+                "btn-secondary gap-2 text-sm transition-colors",
+                shareSuccess && "bg-green-50 border-green-300 text-green-700"
+              )}
+            >
+              {shareSuccess ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
+              {shareSuccess ? "تم النسخ!" : "مشاركة"}
             </button>
-            <button onClick={() => alert("جاري إنشاء ملف PDF للتقرير...")} className="btn-primary gap-2 text-sm">
+            <button onClick={onExportPDF} className="btn-primary gap-2 text-sm">
               <Download className="w-4 h-4" />
               تصدير PDF
             </button>
@@ -319,7 +408,7 @@ function ReportPreview({ generated }: { generated: boolean }) {
           ))}
         </div>
         <div className="divide-y divide-border">
-          {mockStudents.map((student, i) => (
+          {mockStudents.map((student) => (
             <div key={student.id} className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-4 px-5 py-3 items-center">
               <div className="flex items-center gap-2">
                 <div className="w-7 h-7 rounded-full bg-primary-100 flex items-center justify-center">

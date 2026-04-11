@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Search, Plus, Filter, Download, Upload, Eye, Edit2,
   Trash2, ChevronDown, Users, TrendingUp, AlertTriangle,
-  CheckCircle, X, SlidersHorizontal, Grid, List,
+  CheckCircle, X, SlidersHorizontal, Grid, List, Save,
 } from "lucide-react";
 import Link from "next/link";
 import { AppLayout } from "@/components/layout/app-layout";
@@ -13,7 +13,7 @@ import { Stagger, StaggerItem, FadeIn } from "@/components/ui/motion";
 import { ScoreRing } from "@/components/ui/geometric-shapes";
 import { cn } from "@/lib/utils/cn";
 import {
-  mockStudents, mockClasses,
+  mockStudents as _mockStudents, mockClasses,
 } from "@/lib/utils/mock-data";
 import {
   formatDate, studentStatusLabel, riskLevelColor, riskLevelLabel,
@@ -24,16 +24,19 @@ import type { Student, StudentStatus } from "@/types";
 // ─── Students Page ────────────────────────────────────────────────────────────
 
 export default function StudentsPage() {
+  const [students, setStudents] = useState<Student[]>(_mockStudents);
   const [view, setView] = useState<"grid" | "list">("list");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StudentStatus | "all">("all");
   const [classFilter, setClassFilter] = useState<string>("all");
   const [riskFilter, setRiskFilter] = useState<string>("all");
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  const [editStudent, setEditStudent] = useState<Student | null>(null);
+  const [deleteStudent, setDeleteStudent] = useState<Student | null>(null);
   const [showFilters, setShowFilters] = useState(false);
 
   const filtered = useMemo(() => {
-    return mockStudents.filter(s => {
+    return students.filter(s => {
       const matchSearch = !search ||
         s.fullName.includes(search) ||
         s.studentCode.includes(search) ||
@@ -43,7 +46,19 @@ export default function StudentsPage() {
       const matchRisk = riskFilter === "all" || s.riskLevel === riskFilter;
       return matchSearch && matchStatus && matchClass && matchRisk;
     });
-  }, [search, statusFilter, classFilter, riskFilter]);
+  }, [students, search, statusFilter, classFilter, riskFilter]);
+
+  const handleDelete = (student: Student) => {
+    setStudents(prev => prev.filter(s => s.id !== student.id));
+    setDeleteStudent(null);
+    if (selectedStudent?.id === student.id) setSelectedStudent(null);
+  };
+
+  const handleEditSave = (updated: Student) => {
+    setStudents(prev => prev.map(s => s.id === updated.id ? updated : s));
+    setEditStudent(null);
+    if (selectedStudent?.id === updated.id) setSelectedStudent(updated);
+  };
 
   return (
     <AppLayout title="إدارة الطلاب">
@@ -51,9 +66,9 @@ export default function StudentsPage() {
         {/* Stats Row */}
         <Stagger className="grid grid-cols-4 gap-4">
           {[
-            { label: "إجمالي الطلاب", value: mockStudents.length, icon: Users, color: "text-blue-600", bg: "bg-blue-50" },
-            { label: "طلاب نشطون", value: mockStudents.filter(s => s.status === "active").length, icon: CheckCircle, color: "text-green-600", bg: "bg-green-50" },
-            { label: "في خطر", value: mockStudents.filter(s => s.riskLevel === "high").length, icon: AlertTriangle, color: "text-red-600", bg: "bg-red-50" },
+            { label: "إجمالي الطلاب", value: students.length, icon: Users, color: "text-blue-600", bg: "bg-blue-50" },
+            { label: "طلاب نشطون", value: students.filter(s => s.status === "active").length, icon: CheckCircle, color: "text-green-600", bg: "bg-green-50" },
+            { label: "في خطر", value: students.filter(s => s.riskLevel === "high").length, icon: AlertTriangle, color: "text-red-600", bg: "bg-red-50" },
             { label: "متوسط الغياب", value: "7.6%", icon: TrendingUp, color: "text-amber-600", bg: "bg-amber-50" },
           ].map((stat, i) => (
             <StaggerItem key={stat.label}>
@@ -132,24 +147,28 @@ export default function StudentsPage() {
             </div>
 
             <div className="flex-shrink-0 flex gap-2">
-              <motion.button 
-                className="btn-secondary gap-2" 
+              <motion.button
+                className="btn-secondary gap-2"
                 whileTap={{ scale: 0.97 }}
                 onClick={() => {
-                  const csvContent = "data:text/csv;charset=utf-8," + mockStudents.map(s => `${s.fullName},${s.studentCode},${s.status}`).join("\n");
-                  const encodedUri = encodeURI(csvContent);
+                  const header = "الاسم,الكود,الصف,الحالة,المعدل,الحضور\n";
+                  const rows = students.map(s =>
+                    `${s.fullName},${s.studentCode},${s.class.name},${studentStatusLabel[s.status]},${s.gpa?.toFixed(1) ?? ""}%,${s.attendanceRate ?? ""}%`
+                  ).join("\n");
+                  const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + header + rows;
                   const link = document.createElement("a");
-                  link.setAttribute("href", encodedUri);
+                  link.setAttribute("href", encodeURI(csvContent));
                   link.setAttribute("download", "students_report.csv");
                   document.body.appendChild(link);
                   link.click();
+                  document.body.removeChild(link);
                 }}
               >
                 <Download className="w-4 h-4" />
                 تصدير
               </motion.button>
-              <motion.button 
-                className="btn-secondary gap-2" 
+              <motion.button
+                className="btn-secondary gap-2"
                 whileTap={{ scale: 0.97 }}
                 onClick={() => alert("سيتم تفعيل خاصية الاستيراد من ملفات Excel قريباً")}
               >
@@ -236,7 +255,12 @@ export default function StudentsPage() {
 
         {/* Student List */}
         {view === "list" ? (
-          <StudentListView students={filtered} onSelect={setSelectedStudent} />
+          <StudentListView
+            students={filtered}
+            onSelect={setSelectedStudent}
+            onEdit={setEditStudent}
+            onDelete={setDeleteStudent}
+          />
         ) : (
           <StudentGridView students={filtered} onSelect={setSelectedStudent} />
         )}
@@ -248,6 +272,29 @@ export default function StudentsPage() {
           <StudentProfileDrawer
             student={selectedStudent}
             onClose={() => setSelectedStudent(null)}
+            onEdit={() => { setEditStudent(selectedStudent); setSelectedStudent(null); }}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Edit Modal */}
+      <AnimatePresence>
+        {editStudent && (
+          <EditStudentModal
+            student={editStudent}
+            onClose={() => setEditStudent(null)}
+            onSave={handleEditSave}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Delete Confirmation */}
+      <AnimatePresence>
+        {deleteStudent && (
+          <DeleteConfirmModal
+            student={deleteStudent}
+            onClose={() => setDeleteStudent(null)}
+            onConfirm={() => handleDelete(deleteStudent)}
           />
         )}
       </AnimatePresence>
@@ -287,7 +334,14 @@ function FilterSelect({
 
 // ─── Student List View ────────────────────────────────────────────────────────
 
-function StudentListView({ students, onSelect }: { students: Student[]; onSelect: (s: Student) => void }) {
+function StudentListView({
+  students, onSelect, onEdit, onDelete,
+}: {
+  students: Student[];
+  onSelect: (s: Student) => void;
+  onEdit: (s: Student) => void;
+  onDelete: (s: Student) => void;
+}) {
   if (students.length === 0) {
     return (
       <FadeIn>
@@ -312,14 +366,29 @@ function StudentListView({ students, onSelect }: { students: Student[]; onSelect
 
       <div className="divide-y divide-border">
         {students.map((student, i) => (
-          <StudentRow key={student.id} student={student} index={i} onSelect={onSelect} />
+          <StudentRow
+            key={student.id}
+            student={student}
+            index={i}
+            onSelect={onSelect}
+            onEdit={onEdit}
+            onDelete={onDelete}
+          />
         ))}
       </div>
     </div>
   );
 }
 
-function StudentRow({ student, index, onSelect }: { student: Student; index: number; onSelect: (s: Student) => void }) {
+function StudentRow({
+  student, index, onSelect, onEdit, onDelete,
+}: {
+  student: Student;
+  index: number;
+  onSelect: (s: Student) => void;
+  onEdit: (s: Student) => void;
+  onDelete: (s: Student) => void;
+}) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
@@ -345,15 +414,13 @@ function StudentRow({ student, index, onSelect }: { student: Student; index: num
 
       {/* Attendance */}
       <div className="flex items-center justify-end">
-        <div className="text-right">
-          <span className={cn(
-            "text-sm font-bold",
-            (student.attendanceRate ?? 0) >= 90 ? "text-green-600" :
-            (student.attendanceRate ?? 0) >= 75 ? "text-amber-600" : "text-red-600"
-          )}>
-            {formatPercent(student.attendanceRate ?? 0)}
-          </span>
-        </div>
+        <span className={cn(
+          "text-sm font-bold",
+          (student.attendanceRate ?? 0) >= 90 ? "text-green-600" :
+          (student.attendanceRate ?? 0) >= 75 ? "text-amber-600" : "text-red-600"
+        )}>
+          {formatPercent(student.attendanceRate ?? 0)}
+        </span>
       </div>
 
       {/* GPA */}
@@ -385,6 +452,7 @@ function StudentRow({ student, index, onSelect }: { student: Student; index: num
           <Eye className="w-3.5 h-3.5" />
         </motion.button>
         <motion.button
+          onClick={() => onEdit(student)}
           className="p-1.5 rounded-lg hover:bg-amber-50 text-ink-muted hover:text-amber-600 transition-colors"
           whileTap={{ scale: 0.9 }}
           title="تعديل"
@@ -392,6 +460,7 @@ function StudentRow({ student, index, onSelect }: { student: Student; index: num
           <Edit2 className="w-3.5 h-3.5" />
         </motion.button>
         <motion.button
+          onClick={() => onDelete(student)}
           className="p-1.5 rounded-lg hover:bg-red-50 text-ink-muted hover:text-red-600 transition-colors"
           whileTap={{ scale: 0.9 }}
           title="حذف"
@@ -459,7 +528,13 @@ function StudentGridView({ students, onSelect }: { students: Student[]; onSelect
 
 // ─── Student Profile Drawer ───────────────────────────────────────────────────
 
-function StudentProfileDrawer({ student, onClose }: { student: Student; onClose: () => void }) {
+function StudentProfileDrawer({
+  student, onClose, onEdit,
+}: {
+  student: Student;
+  onClose: () => void;
+  onEdit: () => void;
+}) {
   return (
     <>
       {/* Backdrop */}
@@ -500,10 +575,7 @@ function StudentProfileDrawer({ student, onClose }: { student: Student; onClose:
             <div className="text-right">
               <h2 className="text-lg font-bold text-white">{student.fullName}</h2>
               <p className="text-sm text-white/70">{student.studentCode} · {student.class.name}</p>
-              <span className={cn(
-                "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium mt-1",
-                "bg-white/20 text-white"
-              )}>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium mt-1 bg-white/20 text-white">
                 {studentStatusLabel[student.status]}
               </span>
             </div>
@@ -605,9 +677,255 @@ function StudentProfileDrawer({ student, onClose }: { student: Student; onClose:
 
           {/* Actions */}
           <div className="flex gap-3">
-            <button className="btn-secondary flex-1 text-sm">تعديل البيانات</button>
-            <button className="btn-primary flex-1 text-sm">عرض الملف الكامل</button>
+            <button onClick={onEdit} className="btn-secondary flex-1 text-sm">تعديل البيانات</button>
+            <button
+              onClick={onClose}
+              className="btn-primary flex-1 text-sm"
+            >
+              إغلاق الملف
+            </button>
           </div>
+        </div>
+      </motion.div>
+    </>
+  );
+}
+
+// ─── Edit Student Modal ───────────────────────────────────────────────────────
+
+function EditStudentModal({
+  student, onClose, onSave,
+}: {
+  student: Student;
+  onClose: () => void;
+  onSave: (s: Student) => void;
+}) {
+  const [form, setForm] = useState({
+    firstName: student.firstName,
+    lastName: student.lastName,
+    guardianName: student.guardianName,
+    guardianPhone: student.guardianPhone,
+    guardianRelation: student.guardianRelation,
+    address: student.address,
+    status: student.status,
+    classId: student.classId,
+  });
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = () => {
+    setSaving(true);
+    setTimeout(() => {
+      const cls = mockClasses.find(c => c.id === form.classId) ?? student.class;
+      const updated: Student = {
+        ...student,
+        ...form,
+        fullName: `${form.firstName} ${form.lastName}`,
+        class: cls,
+        updatedAt: new Date(),
+      };
+      setSaving(false);
+      onSave(updated);
+    }, 800);
+  };
+
+  return (
+    <>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-50 bg-ink/30 backdrop-blur-sm"
+        onClick={onClose}
+      />
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 16 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 16 }}
+        transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+        className="fixed inset-x-4 top-16 bottom-4 z-50 max-w-xl mx-auto bg-card rounded-2xl border border-border shadow-card-hover overflow-y-auto"
+        dir="rtl"
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border sticky top-0 bg-card z-10">
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-surface-50 text-ink-muted">
+            <X className="w-4 h-4" />
+          </button>
+          <h2 className="text-base font-bold text-ink">تعديل بيانات الطالب</h2>
+        </div>
+
+        {/* Form */}
+        <div className="p-6 space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs text-ink-muted mb-1.5 text-right">الاسم الأول</label>
+              <input
+                value={form.firstName}
+                onChange={e => setForm(f => ({ ...f, firstName: e.target.value }))}
+                className="input-base text-right"
+                dir="rtl"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-ink-muted mb-1.5 text-right">اسم العائلة</label>
+              <input
+                value={form.lastName}
+                onChange={e => setForm(f => ({ ...f, lastName: e.target.value }))}
+                className="input-base text-right"
+                dir="rtl"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs text-ink-muted mb-1.5 text-right">الصف</label>
+            <select
+              value={form.classId}
+              onChange={e => setForm(f => ({ ...f, classId: e.target.value }))}
+              className="input-base text-right"
+              dir="rtl"
+            >
+              {mockClasses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-xs text-ink-muted mb-1.5 text-right">الحالة</label>
+            <select
+              value={form.status}
+              onChange={e => setForm(f => ({ ...f, status: e.target.value as StudentStatus }))}
+              className="input-base text-right"
+              dir="rtl"
+            >
+              <option value="active">نشط</option>
+              <option value="inactive">غير نشط</option>
+              <option value="graduated">خريج</option>
+              <option value="transferred">منقول</option>
+              <option value="suspended">موقوف</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-xs text-ink-muted mb-1.5 text-right">العنوان</label>
+            <input
+              value={form.address}
+              onChange={e => setForm(f => ({ ...f, address: e.target.value }))}
+              className="input-base text-right"
+              dir="rtl"
+            />
+          </div>
+
+          <div className="pt-2 border-t border-border">
+            <p className="text-sm font-semibold text-ink mb-3 text-right">بيانات ولي الأمر</p>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs text-ink-muted mb-1.5 text-right">اسم ولي الأمر</label>
+                <input
+                  value={form.guardianName}
+                  onChange={e => setForm(f => ({ ...f, guardianName: e.target.value }))}
+                  className="input-base text-right"
+                  dir="rtl"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs text-ink-muted mb-1.5 text-right">صلة القرابة</label>
+                  <select
+                    value={form.guardianRelation}
+                    onChange={e => setForm(f => ({ ...f, guardianRelation: e.target.value }))}
+                    className="input-base text-right"
+                    dir="rtl"
+                  >
+                    <option value="أب">أب</option>
+                    <option value="أم">أم</option>
+                    <option value="أخ">أخ</option>
+                    <option value="أخت">أخت</option>
+                    <option value="جد">جد</option>
+                    <option value="أخرى">أخرى</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs text-ink-muted mb-1.5 text-right">رقم الهاتف</label>
+                  <input
+                    value={form.guardianPhone}
+                    onChange={e => setForm(f => ({ ...f, guardianPhone: e.target.value }))}
+                    className="input-base text-right"
+                    dir="rtl"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="sticky bottom-0 bg-card border-t border-border px-6 py-4 flex items-center justify-between gap-3">
+          <button onClick={onClose} className="btn-secondary text-sm">إلغاء</button>
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="btn-primary gap-2 text-sm min-w-32 justify-center"
+          >
+            {saving ? (
+              <div className="flex items-center gap-2">
+                <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                جارٍ الحفظ...
+              </div>
+            ) : (
+              <>
+                <Save className="w-4 h-4" />
+                حفظ التعديلات
+              </>
+            )}
+          </button>
+        </div>
+      </motion.div>
+    </>
+  );
+}
+
+// ─── Delete Confirm Modal ─────────────────────────────────────────────────────
+
+function DeleteConfirmModal({
+  student, onClose, onConfirm,
+}: {
+  student: Student;
+  onClose: () => void;
+  onConfirm: () => void;
+}) {
+  return (
+    <>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-50 bg-ink/30 backdrop-blur-sm"
+        onClick={onClose}
+      />
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.9 }}
+        transition={{ duration: 0.25 }}
+        className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-sm bg-card rounded-2xl border border-border shadow-card-hover p-6 text-center"
+        dir="rtl"
+      >
+        <div className="w-14 h-14 rounded-2xl bg-red-100 flex items-center justify-center mx-auto mb-4">
+          <Trash2 className="w-7 h-7 text-red-600" />
+        </div>
+        <h3 className="text-base font-bold text-ink mb-2">حذف الطالب</h3>
+        <p className="text-sm text-ink-muted mb-1">
+          هل أنت متأكد من حذف بيانات الطالب
+        </p>
+        <p className="text-sm font-semibold text-ink mb-4">{student.fullName}؟</p>
+        <p className="text-xs text-red-500 mb-5">هذا الإجراء لا يمكن التراجع عنه.</p>
+        <div className="flex gap-3">
+          <button onClick={onClose} className="btn-secondary flex-1 text-sm">إلغاء</button>
+          <button
+            onClick={onConfirm}
+            className="flex-1 btn-primary bg-red-600 hover:bg-red-700 border-red-600 hover:border-red-700 text-sm"
+          >
+            نعم، احذف
+          </button>
         </div>
       </motion.div>
     </>

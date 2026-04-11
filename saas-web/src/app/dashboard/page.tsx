@@ -7,6 +7,7 @@ import {
   Eye, PenSquare, Upload, FileText, BarChart2,
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { AppLayout } from "@/components/layout/app-layout";
 import { KPICard } from "@/components/ui/kpi-card";
 import { Stagger, StaggerItem, FadeIn } from "@/components/ui/motion";
@@ -269,6 +270,7 @@ function WeeklyAttendanceCard() {
 // ─── AI Insights ──────────────────────────────────────────────────────────────
 
 function AIInsightsCard() {
+  const router = useRouter();
   const severityColors: Record<string, string> = {
     high: "border-red-200 bg-red-50",
     medium: "border-amber-200 bg-amber-50",
@@ -320,7 +322,10 @@ function AIInsightsCard() {
           ))}
         </div>
 
-        <button className="mt-3 w-full flex items-center justify-center gap-2 text-xs text-primary-600 hover:text-primary-700 py-2 rounded-xl hover:bg-primary-50 transition-colors">
+        <button
+          onClick={() => router.push("/ai-assistant")}
+          className="mt-3 w-full flex items-center justify-center gap-2 text-xs text-primary-600 hover:text-primary-700 py-2 rounded-xl hover:bg-primary-50 transition-colors"
+        >
           <ArrowLeft className="w-3 h-3" />
           عرض جميع التنبيهات
         </button>
@@ -332,6 +337,7 @@ function AIInsightsCard() {
 // ─── At Risk Students ─────────────────────────────────────────────────────────
 
 function AtRiskStudentsCard() {
+  const router = useRouter();
   const atRisk = mockStudents.filter(s => s.riskLevel !== "low");
 
   return (
@@ -372,7 +378,10 @@ function AtRiskStudentsCard() {
           ))}
         </div>
 
-        <button className="mt-3 w-full flex items-center justify-center gap-2 text-xs text-primary-600 hover:text-primary-700 py-2 rounded-xl hover:bg-primary-50 transition-colors">
+        <button
+          onClick={() => router.push("/students?risk=high")}
+          className="mt-3 w-full flex items-center justify-center gap-2 text-xs text-primary-600 hover:text-primary-700 py-2 rounded-xl hover:bg-primary-50 transition-colors"
+        >
           <Eye className="w-3 h-3" />
           عرض جميع الطلاب
         </button>
@@ -404,6 +413,7 @@ const actionLabels: Record<string, string> = {
 };
 
 function ActivityFeedCard() {
+  const router = useRouter();
   return (
     <FadeIn delay={0.25}>
       <div className="card-base p-5">
@@ -462,7 +472,10 @@ function ActivityFeedCard() {
           })}
         </div>
 
-        <button className="w-full flex items-center justify-center gap-2 text-xs text-primary-600 hover:text-primary-700 py-2 rounded-xl hover:bg-primary-50 transition-colors">
+        <button
+          onClick={() => router.push("/activity-log")}
+          className="w-full flex items-center justify-center gap-2 text-xs text-primary-600 hover:text-primary-700 py-2 rounded-xl hover:bg-primary-50 transition-colors"
+        >
           <BarChart2 className="w-3 h-3" />
           عرض سجل النشاطات الكامل
         </button>
