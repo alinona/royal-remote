@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Eye, EyeOff, School, Shield, Zap, Lock, Mail } from "lucide-react";
+import { Eye, EyeOff, School, Shield, Zap, Lock, Mail, X } from "lucide-react";
 import { GeometricMesh, FloatingRing, FloatingDiamond, FloatingHex, GradientOrb } from "@/components/ui/geometric-shapes";
 import { cn } from "@/lib/utils/cn";
 
@@ -13,6 +13,10 @@ export default function AuthPage() {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showForgotPw, setShowForgotPw] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetSending, setResetSending] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,6 +24,15 @@ export default function AuthPage() {
     await new Promise(r => setTimeout(r, 1500));
     setLoading(false);
     window.location.href = "/dashboard";
+  };
+
+  const handleResetPassword = async () => {
+    if (!resetEmail.trim()) return;
+    setResetSending(true);
+    await new Promise(r => setTimeout(r, 1200));
+    setResetSending(false);
+    setResetSent(true);
+    setTimeout(() => { setShowForgotPw(false); setResetSent(false); setResetEmail(""); }, 3000);
   };
 
   return (
@@ -160,7 +173,7 @@ export default function AuthPage() {
 
             {/* Remember + Forgot */}
             <div className="flex items-center justify-between">
-              <button type="button" className="text-xs text-primary-600 hover:text-primary-700 hover:underline transition-colors">
+              <button type="button" onClick={() => { setShowForgotPw(true); setResetEmail(email); }} className="text-xs text-primary-600 hover:text-primary-700 hover:underline transition-colors">
                 نسيت كلمة المرور؟
               </button>
               <label className="flex items-center gap-2 cursor-pointer">
@@ -197,6 +210,75 @@ export default function AuthPage() {
               </AnimatePresence>
             </motion.button>
           </form>
+
+          {/* Forgot Password Modal */}
+          <AnimatePresence>
+            {showForgotPw && (
+              <>
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="fixed inset-0 z-50 bg-ink/30 backdrop-blur-sm"
+                  onClick={() => { setShowForgotPw(false); setResetSent(false); }}
+                />
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95, y: 16 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: 16 }}
+                  className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-sm bg-card rounded-2xl border border-border shadow-card-hover p-6"
+                  dir="rtl"
+                  onClick={e => e.stopPropagation()}
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <button onClick={() => setShowForgotPw(false)} className="p-1.5 rounded-lg hover:bg-surface-50 text-ink-muted">
+                      <X className="w-4 h-4" />
+                    </button>
+                    <h3 className="text-base font-bold text-ink">استعادة كلمة المرور</h3>
+                  </div>
+                  {resetSent ? (
+                    <div className="text-center py-4">
+                      <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-3">
+                        <Shield className="w-6 h-6 text-green-600" />
+                      </div>
+                      <p className="text-sm font-semibold text-ink">تم الإرسال!</p>
+                      <p className="text-xs text-ink-muted mt-1">تحقق من بريدك الإلكتروني لإعادة تعيين كلمة المرور</p>
+                    </div>
+                  ) : (
+                    <>
+                      <p className="text-sm text-ink-muted mb-4 text-right">أدخل بريدك الإلكتروني وسنرسل لك رابط إعادة التعيين</p>
+                      <div className="relative mb-4">
+                        <Mail className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-subtle" />
+                        <input
+                          type="email"
+                          value={resetEmail}
+                          onChange={e => setResetEmail(e.target.value)}
+                          onKeyDown={e => { if (e.key === "Enter") handleResetPassword(); }}
+                          placeholder="أدخل بريدك الإلكتروني"
+                          className="input-base pr-10 text-right w-full"
+                          dir="rtl"
+                          autoFocus
+                        />
+                      </div>
+                      <motion.button
+                        onClick={handleResetPassword}
+                        disabled={resetSending || !resetEmail.trim()}
+                        className="w-full btn-primary justify-center gap-2"
+                        whileTap={{ scale: 0.97 }}
+                      >
+                        {resetSending ? (
+                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        ) : (
+                          <Mail className="w-4 h-4" />
+                        )}
+                        {resetSending ? "جاري الإرسال..." : "إرسال رابط الاستعادة"}
+                      </motion.button>
+                    </>
+                  )}
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>
 
           {/* Security badges */}
           <div className="flex items-center gap-4 mt-6 justify-center">

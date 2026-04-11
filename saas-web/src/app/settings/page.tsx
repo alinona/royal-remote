@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Settings, Bell, Shield, Palette, Database, Save,
@@ -463,9 +463,22 @@ function SecurityTab() {
 // ─── Appearance Tab ───────────────────────────────────────────────────────────
 
 function AppearanceTab() {
-  const [theme, setTheme] = useState<"light" | "dark" | "system">("light");
-  const [primaryHue, setPrimaryHue] = useState(232);
-  const [fontSize, setFontSize] = useState("medium");
+  const [theme, setTheme] = useState<"light" | "dark" | "system">(() => {
+    if (typeof window !== "undefined") {
+      return (localStorage.getItem("eduflow_theme") as "light" | "dark" | "system") ?? "light";
+    }
+    return "light";
+  });
+  const [primaryHue, setPrimaryHue] = useState<number>(() => {
+    if (typeof window !== "undefined") {
+      return Number(localStorage.getItem("eduflow_hue") ?? "232");
+    }
+    return 232;
+  });
+  const [fontSize, setFontSize] = useState<string>(() => {
+    if (typeof window !== "undefined") return localStorage.getItem("eduflow_fontsize") ?? "medium";
+    return "medium";
+  });
   const [sidebarCompact, setSidebarCompact] = useState(false);
   const [animations, setAnimations] = useState(true);
   const [rtl, setRtl] = useState(true);
@@ -478,6 +491,50 @@ function AppearanceTab() {
     { label: "وردي", hue: 330, color: "#db2777" },
     { label: "أحمر", hue: 0, color: "#dc2626" },
   ];
+
+  // Apply dark/light/system theme
+  useEffect(() => {
+    const root = document.documentElement;
+    if (theme === "dark") {
+      root.classList.add("dark");
+    } else if (theme === "light") {
+      root.classList.remove("dark");
+    } else {
+      root.classList.toggle("dark", window.matchMedia("(prefers-color-scheme: dark)").matches);
+    }
+    localStorage.setItem("eduflow_theme", theme);
+  }, [theme]);
+
+  // Apply primary color CSS variables
+  useEffect(() => {
+    const H = primaryHue;
+    const r = document.documentElement;
+    r.style.setProperty("--primary-50",  `${H} 100% 97%`);
+    r.style.setProperty("--primary-100", `${H} 96% 93%`);
+    r.style.setProperty("--primary-200", `${H} 92% 86%`);
+    r.style.setProperty("--primary-300", `${H} 88% 76%`);
+    r.style.setProperty("--primary-400", `${H} 82% 65%`);
+    r.style.setProperty("--primary-500", `${H} 76% 55%`);
+    r.style.setProperty("--primary-600", `${H} 72% 48%`);
+    r.style.setProperty("--primary-700", `${H} 68% 40%`);
+    r.style.setProperty("--primary-800", `${H} 64% 32%`);
+    r.style.setProperty("--primary-900", `${H} 60% 22%`);
+    r.style.setProperty("--primary",     `${H} 76% 55%`);
+    r.style.setProperty("--ring",        `${H} 76% 55%`);
+    localStorage.setItem("eduflow_hue", String(H));
+  }, [primaryHue]);
+
+  // Apply font size
+  useEffect(() => {
+    const sizes: Record<string, string> = { small: "13px", medium: "15px", large: "17px" };
+    document.documentElement.style.setProperty("--font-size-base", sizes[fontSize] ?? "15px");
+    localStorage.setItem("eduflow_fontsize", fontSize);
+  }, [fontSize]);
+
+  // Apply animations toggle
+  useEffect(() => {
+    document.documentElement.classList.toggle("no-animations", !animations);
+  }, [animations]);
 
   return (
     <div className="space-y-6">
