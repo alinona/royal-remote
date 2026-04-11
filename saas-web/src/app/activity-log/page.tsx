@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import {
   Activity, CalendarCheck, BookOpen, Users, Upload,
   FileText, Search, Filter, Download, Eye, Shield,
-  Clock, X,
+  Clock, X, Check,
 } from "lucide-react";
 import { AppLayout } from "@/components/layout/app-layout";
 import { Stagger, StaggerItem, FadeIn } from "@/components/ui/motion";
@@ -103,6 +103,7 @@ export default function ActivityLogPage() {
   const [search, setSearch] = useState("");
   const [actionFilter, setActionFilter] = useState<string>("all");
   const [roleFilter, setRoleFilter] = useState<string>("all");
+  const [exportSuccess, setExportSuccess] = useState(false);
 
   const filtered = extendedLogs.filter(log => {
     const matchSearch = !search ||
@@ -185,21 +186,26 @@ export default function ActivityLogPage() {
             </select>
 
             <motion.button
-              className="btn-secondary gap-2 text-sm"
+              className={cn(
+                "btn-secondary gap-2 text-sm transition-colors",
+                exportSuccess && "bg-green-50 border-green-300 text-green-700"
+              )}
               whileTap={{ scale: 0.97 }}
               onClick={() => {
-                const csvContent = "data:text/csv;charset=utf-8," + filtered.map(l => `${l.user.name},${l.action},${l.resource},${l.createdAt}`).join("\n");
+                const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + filtered.map(l => `${l.user.name},${l.action},${l.resource},${l.createdAt}`).join("\n");
                 const encodedUri = encodeURI(csvContent);
                 const link = document.createElement("a");
                 link.setAttribute("href", encodedUri);
                 link.setAttribute("download", "activity_log.csv");
                 document.body.appendChild(link);
                 link.click();
-                alert(`تم تصدير ${filtered.length} سجل بنجاح إلى ملف CSV`);
+                document.body.removeChild(link);
+                setExportSuccess(true);
+                setTimeout(() => setExportSuccess(false), 3000);
               }}
             >
-              <Download className="w-4 h-4" />
-              تصدير
+              {exportSuccess ? <Check className="w-4 h-4" /> : <Download className="w-4 h-4" />}
+              {exportSuccess ? `تم التصدير (${filtered.length} سجل)` : "تصدير"}
             </motion.button>
           </div>
         </FadeIn>

@@ -23,6 +23,7 @@ export default function AttendancePage() {
   const [attendance, setAttendance] = useState<AttendanceMap>({});
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [exportDone, setExportDone] = useState(false);
 
   const students = mockStudents.filter(s => s.classId === selectedClass.id);
 
@@ -144,22 +145,27 @@ export default function AttendancePage() {
 
             <div className="flex-1" />
 
-            <motion.button 
-              className="btn-secondary gap-2 text-sm" 
+            <motion.button
+              className={cn(
+                "btn-secondary gap-2 text-sm transition-colors",
+                exportDone && "bg-green-50 border-green-300 text-green-700"
+              )}
               whileTap={{ scale: 0.97 }}
               onClick={() => {
-                const csvContent = "data:text/csv;charset=utf-8," + Object.entries(attendance).map(([id, status]) => `${id},${status}`).join("\n");
+                const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + Object.entries(attendance).map(([id, status]) => `${id},${status}`).join("\n");
                 const encodedUri = encodeURI(csvContent);
                 const link = document.createElement("a");
                 link.setAttribute("href", encodedUri);
                 link.setAttribute("download", `attendance_${formatDate(selectedDate, "yyyy-MM-dd")}.csv`);
                 document.body.appendChild(link);
                 link.click();
-                alert("تم تصدير تقرير الحضور بنجاح");
+                document.body.removeChild(link);
+                setExportDone(true);
+                setTimeout(() => setExportDone(false), 3000);
               }}
             >
-              <Download className="w-4 h-4" />
-              تصدير
+              {exportDone ? <Check className="w-4 h-4" /> : <Download className="w-4 h-4" />}
+              {exportDone ? "تم التصدير!" : "تصدير"}
             </motion.button>
 
             <motion.button

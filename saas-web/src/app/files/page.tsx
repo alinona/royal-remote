@@ -399,6 +399,7 @@ export default function FilesPage() {
             onFolderClick={navigateToFolder}
             onFileClick={setPreviewFile}
             onDownload={handleDownload}
+            onShare={handleShare}
             onDelete={file => setDeleteTarget(file)}
           />
         )}
@@ -544,19 +545,20 @@ function FileCard({
 // ─── File List View ───────────────────────────────────────────────────────────
 
 function FileListView({
-  folders, files, onFolderClick, onFileClick, onDownload, onDelete,
+  folders, files, onFolderClick, onFileClick, onDownload, onShare, onDelete,
 }: {
   folders: Folder[];
   files: FileItem[];
   onFolderClick: (f: Folder) => void;
   onFileClick: (f: FileItem) => void;
   onDownload: (f: FileItem) => void;
+  onShare: (f: FileItem) => void;
   onDelete: (f: FileItem) => void;
 }) {
   return (
     <FadeIn>
       <div className="card-base overflow-hidden">
-        <div className="grid grid-cols-[2fr_1fr_1fr_80px] gap-4 px-5 py-3 border-b border-border bg-surface-50">
+        <div className="grid grid-cols-[2fr_1fr_1fr_100px] gap-4 px-5 py-3 border-b border-border bg-surface-50">
           {["الاسم", "الحجم", "آخر تعديل", ""].map(h => (
             <span key={h} className="text-[11px] font-semibold text-ink-muted uppercase tracking-wide text-right">{h}</span>
           ))}
@@ -570,7 +572,7 @@ function FileListView({
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.03 }}
               onClick={() => onFolderClick(folder)}
-              className="grid grid-cols-[2fr_1fr_1fr_80px] gap-4 px-5 py-3 hover:bg-surface-50 cursor-pointer items-center transition-colors"
+              className="grid grid-cols-[2fr_1fr_1fr_100px] gap-4 px-5 py-3 hover:bg-surface-50 cursor-pointer items-center transition-colors"
             >
               <div className="flex items-center gap-3">
                 <FolderOpen className="w-4 h-4 flex-shrink-0" style={{ color: folder.color }} />
@@ -591,7 +593,7 @@ function FileListView({
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: (folders.length + i) * 0.03 }}
                 onClick={() => onFileClick(file)}
-                className="grid grid-cols-[2fr_1fr_1fr_80px] gap-4 px-5 py-3 hover:bg-surface-50 cursor-pointer items-center transition-colors group"
+                className="grid grid-cols-[2fr_1fr_1fr_100px] gap-4 px-5 py-3 hover:bg-surface-50 cursor-pointer items-center transition-colors group"
               >
                 <div className="flex items-center gap-3">
                   <config.icon className={cn("w-4 h-4 flex-shrink-0", config.color)} />
@@ -606,6 +608,13 @@ function FileListView({
                     title="تحميل"
                   >
                     <Download className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={e => { e.stopPropagation(); onShare(file); }}
+                    className="p-1 rounded hover:bg-surface-100 text-ink-muted hover:text-green-600"
+                    title="مشاركة"
+                  >
+                    <Share2 className="w-3.5 h-3.5" />
                   </button>
                   <button
                     onClick={e => { e.stopPropagation(); onDelete(file); }}
