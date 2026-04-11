@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search, Plus, Filter, Download, Upload, Eye, Edit2,
   Trash2, ChevronDown, Users, TrendingUp, AlertTriangle,
   CheckCircle, X, SlidersHorizontal, Grid, List, Save,
+  FileSpreadsheet,
 } from "lucide-react";
-import Link from "next/link";
 import { AppLayout } from "@/components/layout/app-layout";
 import { Stagger, StaggerItem, FadeIn } from "@/components/ui/motion";
 import { ScoreRing } from "@/components/ui/geometric-shapes";
@@ -34,6 +34,8 @@ export default function StudentsPage() {
   const [editStudent, setEditStudent] = useState<Student | null>(null);
   const [deleteStudent, setDeleteStudent] = useState<Student | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+  const [showNewStudent, setShowNewStudent] = useState(false);
+  const [showImport, setShowImport] = useState(false);
 
   const filtered = useMemo(() => {
     return students.filter(s => {
@@ -58,6 +60,11 @@ export default function StudentsPage() {
     setStudents(prev => prev.map(s => s.id === updated.id ? updated : s));
     setEditStudent(null);
     if (selectedStudent?.id === updated.id) setSelectedStudent(updated);
+  };
+
+  const handleAddStudent = (student: Student) => {
+    setStudents(prev => [student, ...prev]);
+    setShowNewStudent(false);
   };
 
   return (
@@ -170,17 +177,19 @@ export default function StudentsPage() {
               <motion.button
                 className="btn-secondary gap-2"
                 whileTap={{ scale: 0.97 }}
-                onClick={() => alert("سيتم تفعيل خاصية الاستيراد من ملفات Excel قريباً")}
+                onClick={() => setShowImport(true)}
               >
                 <Upload className="w-4 h-4" />
                 استيراد
               </motion.button>
-              <Link href="/students/new">
-                <motion.button className="btn-primary gap-2" whileTap={{ scale: 0.97 }}>
-                  <Plus className="w-4 h-4" />
-                  طالب جديد
-                </motion.button>
-              </Link>
+              <motion.button
+                className="btn-primary gap-2"
+                whileTap={{ scale: 0.97 }}
+                onClick={() => setShowNewStudent(true)}
+              >
+                <Plus className="w-4 h-4" />
+                طالب جديد
+              </motion.button>
             </div>
           </div>
 
@@ -295,6 +304,25 @@ export default function StudentsPage() {
             student={deleteStudent}
             onClose={() => setDeleteStudent(null)}
             onConfirm={() => handleDelete(deleteStudent)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* New Student Modal */}
+      <AnimatePresence>
+        {showNewStudent && (
+          <NewStudentModal
+            onClose={() => setShowNewStudent(false)}
+            onSave={handleAddStudent}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Import Students Modal */}
+      <AnimatePresence>
+        {showImport && (
+          <ImportStudentsModal
+            onClose={() => setShowImport(false)}
           />
         )}
       </AnimatePresence>
@@ -878,6 +906,315 @@ function EditStudentModal({
             )}
           </button>
         </div>
+      </motion.div>
+    </>
+  );
+}
+
+// ─── New Student Modal ────────────────────────────────────────────────────────
+
+function NewStudentModal({
+  onClose, onSave,
+}: {
+  onClose: () => void;
+  onSave: (s: Student) => void;
+}) {
+  const [form, setForm] = useState({
+    firstName: "",
+    lastName: "",
+    nationalId: "",
+    gender: "male" as "male" | "female",
+    classId: mockClasses[0]?.id ?? "",
+    address: "",
+    guardianName: "",
+    guardianRelation: "أب",
+    guardianPhone: "",
+  });
+  const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const validate = () => {
+    const e: Record<string, string> = {};
+    if (!form.firstName.trim()) e.firstName = "الاسم الأول مطلوب";
+    if (!form.lastName.trim()) e.lastName = "اسم العائلة مطلوب";
+    if (!form.nationalId.trim()) e.nationalId = "رقم الهوية مطلوب";
+    if (!form.guardianName.trim()) e.guardianName = "اسم ولي الأمر مطلوب";
+    if (!form.guardianPhone.trim()) e.guardianPhone = "رقم الهاتف مطلوب";
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  };
+
+  const handleSave = () => {
+    if (!validate()) return;
+    setSaving(true);
+    setTimeout(() => {
+      const cls = mockClasses.find(c => c.id === form.classId) ?? mockClasses[0];
+      const student: Student = {
+        id: `s${Date.now()}`,
+        studentCode: `STD${Date.now().toString().slice(-5)}`,
+        nationalId: form.nationalId,
+        firstName: form.firstName,
+        lastName: form.lastName,
+        fullName: `${form.firstName} ${form.lastName}`,
+        gender: form.gender,
+        dateOfBirth: new Date(2010, 0, 1),
+        address: form.address,
+        classId: form.classId,
+        class: cls,
+        status: "active",
+        enrollmentDate: new Date(),
+        schoolId: "s1",
+        guardianName: form.guardianName,
+        guardianRelation: form.guardianRelation,
+        guardianPhone: form.guardianPhone,
+        gpa: undefined,
+        attendanceRate: undefined,
+        behaviorScore: undefined,
+        riskLevel: "low",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      setSaving(false);
+      onSave(student);
+    }, 800);
+  };
+
+  const field = (key: keyof typeof errors, label: string, input: React.ReactNode) => (
+    <div>
+      <label className="block text-xs text-ink-muted mb-1.5 text-right">{label}</label>
+      {input}
+      {errors[key] && <p className="text-[11px] text-red-500 mt-1 text-right">{errors[key]}</p>}
+    </div>
+  );
+
+  return (
+    <>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-50 bg-ink/30 backdrop-blur-sm"
+        onClick={onClose}
+      />
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 16 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 16 }}
+        transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+        className="fixed inset-x-4 top-16 bottom-4 z-50 max-w-xl mx-auto bg-card rounded-2xl border border-border shadow-card-hover overflow-y-auto"
+        dir="rtl"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border sticky top-0 bg-card z-10">
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-surface-50 text-ink-muted">
+            <X className="w-4 h-4" />
+          </button>
+          <h2 className="text-base font-bold text-ink">تسجيل طالب جديد</h2>
+        </div>
+
+        <div className="p-6 space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            {field("firstName", "الاسم الأول",
+              <input value={form.firstName} onChange={e => setForm(f => ({ ...f, firstName: e.target.value }))}
+                className="input-base text-right" dir="rtl" placeholder="أدخل الاسم الأول" />
+            )}
+            {field("lastName", "اسم العائلة",
+              <input value={form.lastName} onChange={e => setForm(f => ({ ...f, lastName: e.target.value }))}
+                className="input-base text-right" dir="rtl" placeholder="أدخل اسم العائلة" />
+            )}
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            {field("nationalId", "رقم الهوية / الإقامة",
+              <input value={form.nationalId} onChange={e => setForm(f => ({ ...f, nationalId: e.target.value }))}
+                className="input-base text-right" dir="rtl" placeholder="10 أرقام" maxLength={10} />
+            )}
+            <div>
+              <label className="block text-xs text-ink-muted mb-1.5 text-right">الجنس</label>
+              <select value={form.gender} onChange={e => setForm(f => ({ ...f, gender: e.target.value as "male" | "female" }))}
+                className="input-base text-right" dir="rtl">
+                <option value="male">ذكر</option>
+                <option value="female">أنثى</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs text-ink-muted mb-1.5 text-right">الصف الدراسي</label>
+            <select value={form.classId} onChange={e => setForm(f => ({ ...f, classId: e.target.value }))}
+              className="input-base text-right" dir="rtl">
+              {mockClasses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-xs text-ink-muted mb-1.5 text-right">العنوان</label>
+            <input value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))}
+              className="input-base text-right" dir="rtl" placeholder="الحي، الشارع" />
+          </div>
+
+          <div className="pt-2 border-t border-border">
+            <p className="text-sm font-semibold text-ink mb-3 text-right">بيانات ولي الأمر</p>
+            <div className="space-y-3">
+              {field("guardianName", "اسم ولي الأمر",
+                <input value={form.guardianName} onChange={e => setForm(f => ({ ...f, guardianName: e.target.value }))}
+                  className="input-base text-right" dir="rtl" />
+              )}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs text-ink-muted mb-1.5 text-right">صلة القرابة</label>
+                  <select value={form.guardianRelation} onChange={e => setForm(f => ({ ...f, guardianRelation: e.target.value }))}
+                    className="input-base text-right" dir="rtl">
+                    {["أب", "أم", "أخ", "أخت", "جد", "أخرى"].map(r => <option key={r} value={r}>{r}</option>)}
+                  </select>
+                </div>
+                {field("guardianPhone", "رقم الهاتف",
+                  <input value={form.guardianPhone} onChange={e => setForm(f => ({ ...f, guardianPhone: e.target.value }))}
+                    className="input-base text-right" dir="rtl" placeholder="+966 5X XXX XXXX" />
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="sticky bottom-0 bg-card border-t border-border px-6 py-4 flex items-center justify-between gap-3">
+          <button onClick={onClose} className="btn-secondary text-sm">إلغاء</button>
+          <button onClick={handleSave} disabled={saving} className="btn-primary gap-2 text-sm min-w-32 justify-center">
+            {saving ? (
+              <div className="flex items-center gap-2">
+                <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                جارٍ الحفظ...
+              </div>
+            ) : (
+              <>
+                <Save className="w-4 h-4" />
+                إضافة الطالب
+              </>
+            )}
+          </button>
+        </div>
+      </motion.div>
+    </>
+  );
+}
+
+// ─── Import Students Modal ────────────────────────────────────────────────────
+
+function ImportStudentsModal({ onClose }: { onClose: () => void }) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [file, setFile] = useState<File | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [imported, setImported] = useState(false);
+
+  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (f) setFile(f);
+  };
+
+  const handleImport = () => {
+    if (!file) return;
+    setImporting(true);
+    setTimeout(() => {
+      setImporting(false);
+      setImported(true);
+    }, 1500);
+  };
+
+  return (
+    <>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-50 bg-ink/30 backdrop-blur-sm"
+        onClick={onClose}
+      />
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 8 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 8 }}
+        transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+        className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-md bg-card rounded-2xl border border-border shadow-card-hover p-6"
+        dir="rtl"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between mb-5">
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-surface-50 text-ink-muted">
+            <X className="w-4 h-4" />
+          </button>
+          <h2 className="text-base font-bold text-ink">استيراد بيانات الطلاب</h2>
+        </div>
+
+        {imported ? (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="text-center py-6"
+          >
+            <div className="w-14 h-14 rounded-2xl bg-green-100 flex items-center justify-center mx-auto mb-4">
+              <CheckCircle className="w-7 h-7 text-green-600" />
+            </div>
+            <p className="text-base font-bold text-ink mb-1">تم الاستيراد بنجاح</p>
+            <p className="text-sm text-ink-muted">
+              تم رفع الملف وسيتم معالجة بيانات الطلاب خلال لحظات
+            </p>
+            <button onClick={onClose} className="btn-primary mt-5 text-sm">إغلاق</button>
+          </motion.div>
+        ) : (
+          <>
+            <div
+              onClick={() => fileInputRef.current?.click()}
+              className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors ${
+                file ? "border-primary bg-primary-50" : "border-border hover:border-primary-300 hover:bg-primary-50/30"
+              }`}
+            >
+              <FileSpreadsheet className={`w-10 h-10 mx-auto mb-3 ${file ? "text-primary-600" : "text-ink-subtle"}`} />
+              {file ? (
+                <>
+                  <p className="text-sm font-semibold text-primary-700">{file.name}</p>
+                  <p className="text-xs text-ink-muted mt-1">{(file.size / 1024).toFixed(1)} KB</p>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm font-medium text-ink">اسحب ملف CSV أو Excel هنا</p>
+                  <p className="text-xs text-ink-muted mt-1">أو انقر لاختيار الملف</p>
+                </>
+              )}
+            </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".csv,.xlsx,.xls"
+              className="hidden"
+              onChange={handleFile}
+            />
+
+            <p className="text-xs text-ink-muted mt-3 text-right">
+              يجب أن يحتوي الملف على أعمدة: الاسم، رقم الهوية، الصف، ولي الأمر، رقم الهاتف
+            </p>
+
+            <div className="flex gap-3 mt-4">
+              <button onClick={onClose} className="btn-secondary flex-1 text-sm">إلغاء</button>
+              <button
+                onClick={handleImport}
+                disabled={!file || importing}
+                className={`btn-primary flex-1 gap-2 text-sm justify-center ${!file && "opacity-50 cursor-not-allowed"}`}
+              >
+                {importing ? (
+                  <>
+                    <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    جارٍ الاستيراد...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="w-4 h-4" />
+                    استيراد
+                  </>
+                )}
+              </button>
+            </div>
+          </>
+        )}
       </motion.div>
     </>
   );

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  BookOpen, Plus, Save, ChevronDown, BarChart2,
+  BookOpen, Plus, Save, Check, ChevronDown, BarChart2,
   TrendingUp, TrendingDown, Award, Filter,
 } from "lucide-react";
 import { AppLayout } from "@/components/layout/app-layout";
@@ -34,6 +34,8 @@ export default function GradesPage() {
   const [maxScore, setMaxScore] = useState(100);
   const [grades, setGrades] = useState<Record<string, number>>({});
   const [view, setView] = useState<"entry" | "analytics">("entry");
+  const [savingGrades, setSavingGrades] = useState(false);
+  const [savedGrades, setSavedGrades] = useState(false);
 
   const students = mockStudents.filter(s => s.classId === selectedClass.id);
 
@@ -132,24 +134,40 @@ export default function GradesPage() {
               </div>
               <div className="flex-1" />
               <motion.button
-                className="btn-primary gap-2 text-sm"
-                whileTap={{ scale: 0.97 }}
+                className={cn(
+                  "btn-primary gap-2 text-sm min-w-36 justify-center",
+                  (savingGrades || Object.keys(grades).length === 0) && "opacity-60 cursor-not-allowed",
+                  savedGrades && "bg-green-600 border-green-600 hover:bg-green-700"
+                )}
+                whileTap={Object.keys(grades).length > 0 ? { scale: 0.97 } : {}}
+                disabled={savingGrades || Object.keys(grades).length === 0}
                 onClick={() => {
                   const count = Object.keys(grades).length;
-                  if (count === 0) { alert("لم تُدخل أي درجات بعد"); return; }
-                  const btn = document.activeElement as HTMLButtonElement;
-                  const originalText = btn.innerText;
-                  btn.innerText = "جاري الحفظ...";
-                  btn.disabled = true;
+                  if (count === 0) return;
+                  setSavingGrades(true);
                   setTimeout(() => {
-                    alert(`تم حفظ درجات ${count} طالب بنجاح في سجلات الشعبة ✓`);
-                    btn.innerText = originalText;
-                    btn.disabled = false;
+                    setSavingGrades(false);
+                    setSavedGrades(true);
+                    setTimeout(() => setSavedGrades(false), 3000);
                   }, 1000);
                 }}
               >
-                <Save className="w-4 h-4" />
-                حفظ الدرجات
+                {savingGrades ? (
+                  <>
+                    <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    جاري الحفظ...
+                  </>
+                ) : savedGrades ? (
+                  <>
+                    <Check className="w-4 h-4" />
+                    تم الحفظ!
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4" />
+                    حفظ الدرجات
+                  </>
+                )}
               </motion.button>
             </div>
           </div>

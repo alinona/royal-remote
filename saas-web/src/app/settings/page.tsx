@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Settings, Bell, Shield, Palette, Database, Save,
@@ -136,13 +136,24 @@ export default function SettingsPage() {
 // ─── General Tab ──────────────────────────────────────────────────────────────
 
 function GeneralTab() {
+  const [form, setForm] = useState({
+    name: "مدرسة منارات المستقبل النموذجية",
+    email: "info@future-school.edu.sa",
+    phone: "+966 50 123 4567",
+    address: "الرياض، حي الملقا، طريق الملك فهد",
+    year: "1446",
+    gradeSystem: "100",
+    principal: "أ. منى السلمي",
+  });
+
   return (
     <Stagger className="space-y-4">
       <StaggerItem>
         <label className="block text-sm font-medium text-ink mb-1.5 text-right">اسم المدرسة</label>
         <input
           type="text"
-          defaultValue="مدرسة منارات المستقبل النموذجية"
+          value={form.name}
+          onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
           className="input-base text-right"
           dir="rtl"
         />
@@ -152,14 +163,26 @@ function GeneralTab() {
           <label className="block text-sm font-medium text-ink mb-1.5 text-right">البريد الإلكتروني</label>
           <div className="relative">
             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-subtle" />
-            <input type="email" defaultValue="info@future-school.edu.sa" className="input-base pl-10 text-right" dir="rtl" />
+            <input
+              type="email"
+              value={form.email}
+              onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+              className="input-base pl-10 text-right"
+              dir="rtl"
+            />
           </div>
         </StaggerItem>
         <StaggerItem>
           <label className="block text-sm font-medium text-ink mb-1.5 text-right">رقم الهاتف</label>
           <div className="relative">
             <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-subtle" />
-            <input type="tel" defaultValue="+966 50 123 4567" className="input-base pl-10 text-right" dir="rtl" />
+            <input
+              type="tel"
+              value={form.phone}
+              onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
+              className="input-base pl-10 text-right"
+              dir="rtl"
+            />
           </div>
         </StaggerItem>
       </div>
@@ -167,7 +190,8 @@ function GeneralTab() {
         <label className="block text-sm font-medium text-ink mb-1.5 text-right">العنوان</label>
         <textarea
           rows={3}
-          defaultValue="الرياض، حي الملقا، طريق الملك فهد"
+          value={form.address}
+          onChange={e => setForm(f => ({ ...f, address: e.target.value }))}
           className="input-base text-right"
           dir="rtl"
         />
@@ -175,13 +199,23 @@ function GeneralTab() {
       <div className="grid grid-cols-2 gap-4">
         <StaggerItem>
           <label className="block text-sm font-medium text-ink mb-1.5 text-right">العام الدراسي</label>
-          <select className="input-base text-right" dir="rtl" defaultValue="1446">
+          <select
+            value={form.year}
+            onChange={e => setForm(f => ({ ...f, year: e.target.value }))}
+            className="input-base text-right"
+            dir="rtl"
+          >
             {["1445", "1446", "1447"].map(y => <option key={y} value={y}>{y}/{Number(y)+1} هـ</option>)}
           </select>
         </StaggerItem>
         <StaggerItem>
           <label className="block text-sm font-medium text-ink mb-1.5 text-right">نظام التقييم</label>
-          <select className="input-base text-right" dir="rtl" defaultValue="100">
+          <select
+            value={form.gradeSystem}
+            onChange={e => setForm(f => ({ ...f, gradeSystem: e.target.value }))}
+            className="input-base text-right"
+            dir="rtl"
+          >
             <option value="100">نسبة مئوية (100)</option>
             <option value="letter">حروف (A-F)</option>
             <option value="gpa">GPA (4.0)</option>
@@ -190,7 +224,13 @@ function GeneralTab() {
       </div>
       <StaggerItem>
         <label className="block text-sm font-medium text-ink mb-1.5 text-right">اسم مدير المدرسة</label>
-        <input type="text" defaultValue="أ. منى السلمي" className="input-base text-right" dir="rtl" />
+        <input
+          type="text"
+          value={form.principal}
+          onChange={e => setForm(f => ({ ...f, principal: e.target.value }))}
+          className="input-base text-right"
+          dir="rtl"
+        />
       </StaggerItem>
     </Stagger>
   );
@@ -423,9 +463,22 @@ function SecurityTab() {
 // ─── Appearance Tab ───────────────────────────────────────────────────────────
 
 function AppearanceTab() {
-  const [theme, setTheme] = useState<"light" | "dark" | "system">("light");
-  const [primaryHue, setPrimaryHue] = useState(232);
-  const [fontSize, setFontSize] = useState("medium");
+  const [theme, setTheme] = useState<"light" | "dark" | "system">(() => {
+    if (typeof window !== "undefined") {
+      return (localStorage.getItem("eduflow_theme") as "light" | "dark" | "system") ?? "light";
+    }
+    return "light";
+  });
+  const [primaryHue, setPrimaryHue] = useState<number>(() => {
+    if (typeof window !== "undefined") {
+      return Number(localStorage.getItem("eduflow_hue") ?? "232");
+    }
+    return 232;
+  });
+  const [fontSize, setFontSize] = useState<string>(() => {
+    if (typeof window !== "undefined") return localStorage.getItem("eduflow_fontsize") ?? "medium";
+    return "medium";
+  });
   const [sidebarCompact, setSidebarCompact] = useState(false);
   const [animations, setAnimations] = useState(true);
   const [rtl, setRtl] = useState(true);
@@ -438,6 +491,50 @@ function AppearanceTab() {
     { label: "وردي", hue: 330, color: "#db2777" },
     { label: "أحمر", hue: 0, color: "#dc2626" },
   ];
+
+  // Apply dark/light/system theme
+  useEffect(() => {
+    const root = document.documentElement;
+    if (theme === "dark") {
+      root.classList.add("dark");
+    } else if (theme === "light") {
+      root.classList.remove("dark");
+    } else {
+      root.classList.toggle("dark", window.matchMedia("(prefers-color-scheme: dark)").matches);
+    }
+    localStorage.setItem("eduflow_theme", theme);
+  }, [theme]);
+
+  // Apply primary color CSS variables
+  useEffect(() => {
+    const H = primaryHue;
+    const r = document.documentElement;
+    r.style.setProperty("--primary-50",  `${H} 100% 97%`);
+    r.style.setProperty("--primary-100", `${H} 96% 93%`);
+    r.style.setProperty("--primary-200", `${H} 92% 86%`);
+    r.style.setProperty("--primary-300", `${H} 88% 76%`);
+    r.style.setProperty("--primary-400", `${H} 82% 65%`);
+    r.style.setProperty("--primary-500", `${H} 76% 55%`);
+    r.style.setProperty("--primary-600", `${H} 72% 48%`);
+    r.style.setProperty("--primary-700", `${H} 68% 40%`);
+    r.style.setProperty("--primary-800", `${H} 64% 32%`);
+    r.style.setProperty("--primary-900", `${H} 60% 22%`);
+    r.style.setProperty("--primary",     `${H} 76% 55%`);
+    r.style.setProperty("--ring",        `${H} 76% 55%`);
+    localStorage.setItem("eduflow_hue", String(H));
+  }, [primaryHue]);
+
+  // Apply font size
+  useEffect(() => {
+    const sizes: Record<string, string> = { small: "13px", medium: "15px", large: "17px" };
+    document.documentElement.style.setProperty("--font-size-base", sizes[fontSize] ?? "15px");
+    localStorage.setItem("eduflow_fontsize", fontSize);
+  }, [fontSize]);
+
+  // Apply animations toggle
+  useEffect(() => {
+    document.documentElement.classList.toggle("no-animations", !animations);
+  }, [animations]);
 
   return (
     <div className="space-y-6">
@@ -543,6 +640,10 @@ function DataTab() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteText, setDeleteText] = useState("");
   const [retention, setRetention]   = useState("365");
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [importing, setImporting]   = useState(false);
+  const [imported, setImported]     = useState(false);
+  const importRef = React.useRef<HTMLInputElement>(null);
 
   const handleBackup = () => {
     setBackingUp(true);
@@ -600,7 +701,21 @@ function DataTab() {
               }
               {backingUp ? "جاري النسخ..." : backedUp ? "تم بنجاح!" : "إنشاء نسخة احتياطية"}
             </button>
-            <button className="btn-secondary gap-2 text-sm">
+            <button
+              className="btn-secondary gap-2 text-sm"
+              onClick={() => {
+                const content = "نسخة احتياطية - مدرسة منارات المستقبل\nالتاريخ: " + new Date().toLocaleDateString("ar-SA");
+                const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement("a");
+                link.href = url;
+                link.download = `backup_${new Date().toISOString().slice(0, 10)}.txt`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+              }}
+            >
               <Download className="w-4 h-4" />
               تحميل آخر نسخة
             </button>
@@ -646,15 +761,66 @@ function DataTab() {
           <Upload className="w-4 h-4 text-ink-muted" />
           استيراد البيانات
         </h3>
-        <div className="border-2 border-dashed border-border rounded-xl p-6 text-center">
-          <Upload className="w-8 h-8 text-ink-subtle mx-auto mb-2" />
-          <p className="text-sm text-ink-muted mb-1">اسحب ملف CSV أو Excel هنا</p>
-          <p className="text-xs text-ink-subtle mb-3">أو</p>
-          <button className="btn-secondary text-sm gap-2">
-            <Upload className="w-4 h-4" />
-            اختر ملفًا من جهازك
-          </button>
+        <input
+          ref={importRef}
+          type="file"
+          accept=".csv,.xlsx,.xls"
+          className="hidden"
+          onChange={e => {
+            const f = e.target.files?.[0];
+            if (f) { setImportFile(f); setImported(false); }
+          }}
+        />
+        <div
+          onClick={() => importRef.current?.click()}
+          className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-colors ${
+            importFile ? "border-primary bg-primary-50" : "border-border hover:border-primary-300 hover:bg-surface-50"
+          }`}
+        >
+          <Upload className={`w-8 h-8 mx-auto mb-2 ${importFile ? "text-primary-600" : "text-ink-subtle"}`} />
+          {importFile ? (
+            <>
+              <p className="text-sm font-semibold text-primary-700">{importFile.name}</p>
+              <p className="text-xs text-ink-muted mt-1">{(importFile.size / 1024).toFixed(1)} KB — جاهز للاستيراد</p>
+            </>
+          ) : (
+            <>
+              <p className="text-sm text-ink-muted mb-1">اسحب ملف CSV أو Excel هنا</p>
+              <p className="text-xs text-ink-subtle mb-3">أو</p>
+            </>
+          )}
+          {!importFile && (
+            <button
+              onClick={e => { e.stopPropagation(); importRef.current?.click(); }}
+              className="btn-secondary text-sm gap-2"
+            >
+              <Upload className="w-4 h-4" />
+              اختر ملفًا من جهازك
+            </button>
+          )}
         </div>
+        {importFile && !imported && (
+          <button
+            onClick={() => {
+              setImporting(true);
+              setTimeout(() => { setImporting(false); setImported(true); }, 1500);
+            }}
+            disabled={importing}
+            className="btn-primary gap-2 text-sm mt-3"
+          >
+            {importing ? (
+              <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            ) : (
+              <Upload className="w-4 h-4" />
+            )}
+            {importing ? "جارٍ الاستيراد..." : "استيراد الآن"}
+          </button>
+        )}
+        {imported && (
+          <p className="text-xs text-green-600 flex items-center gap-1.5 mt-2">
+            <Check className="w-3 h-3" /> تم استيراد البيانات بنجاح
+          </p>
+        )}
       </div>
 
       {/* Retention */}

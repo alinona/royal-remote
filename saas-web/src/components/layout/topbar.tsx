@@ -18,6 +18,7 @@ interface TopbarProps {
 }
 
 export function Topbar({ sidebarCollapsed, title, onMobileMenuToggle, isMobile }: TopbarProps) {
+  const router = useRouter();
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [notifOpen, setNotifOpen] = useState(false);
@@ -160,10 +161,10 @@ export function Topbar({ sidebarCollapsed, title, onMobileMenuToggle, isMobile }
                   <p className="text-sm font-semibold text-ink">منى السلمي</p>
                   <p className="text-xs text-ink-muted">مديرة المدرسة</p>
                 </div>
-                <button className="w-full flex justify-between items-center px-3 py-2 text-sm text-ink-muted hover:bg-surface-50 hover:text-ink rounded-lg transition-colors">
+                <button onClick={() => { setProfileOpen(false); router.push("/settings"); }} className="w-full flex justify-between items-center px-3 py-2 text-sm text-ink-muted hover:bg-surface-50 hover:text-ink rounded-lg transition-colors">
                   <User className="w-4 h-4 ml-2" /> إعدادات الحساب
                 </button>
-                <button className="w-full flex justify-between items-center px-3 py-2 text-sm text-danger hover:bg-red-50 rounded-lg transition-colors mt-1">
+                <button onClick={() => { setProfileOpen(false); router.push("/auth"); }} className="w-full flex justify-between items-center px-3 py-2 text-sm text-danger hover:bg-red-50 rounded-lg transition-colors mt-1">
                   <LogOut className="w-4 h-4 ml-2" /> تسجيل الخروج
                 </button>
               </motion.div>
@@ -291,10 +292,11 @@ function SearchResultItem({ title, subtitle, type, onClick }: { title: string; s
 }
 
 function NotificationsPanel({ onClose }: { onClose: () => void }) {
+  const router = useRouter();
   const notifications = [
-    { id: 1, title: "34 طالبًا في خطر أكاديمي", desc: "تحليل الذكاء الاصطناعي", time: "منذ 5 دقائق", urgent: true },
-    { id: 2, title: "انتهى تسجيل الحضور - الصف 1أ", desc: "أحمد الزهراني", time: "منذ 10 دقائق", urgent: false },
-    { id: 3, title: "تقرير نهاية الفصل جاهز", desc: "نظام التقارير", time: "منذ ساعة", urgent: false },
+    { id: 1, title: "34 طالبًا في خطر أكاديمي", desc: "تحليل الذكاء الاصطناعي", time: "منذ 5 دقائق", urgent: true, href: "/ai-assistant" },
+    { id: 2, title: "انتهى تسجيل الحضور - الصف 1أ", desc: "أحمد الزهراني", time: "منذ 10 دقائق", urgent: false, href: "/attendance" },
+    { id: 3, title: "تقرير نهاية الفصل جاهز", desc: "نظام التقارير", time: "منذ ساعة", urgent: false, href: "/reports" },
   ];
   return (
     <motion.div initial={{ opacity: 0, y: 8, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 8, scale: 0.96 }} transition={{ duration: 0.2 }} className={cn("absolute top-full left-0 mt-2 w-72 md:w-80", "bg-card rounded-2xl border border-border shadow-card-hover", "overflow-hidden z-50 text-right")} dir="rtl">
@@ -304,7 +306,7 @@ function NotificationsPanel({ onClose }: { onClose: () => void }) {
       </div>
       <div className="divide-y divide-border">
         {notifications.map((n) => (
-          <motion.div key={n.id} className={cn("flex gap-3 p-4 hover:bg-surface-50 cursor-pointer transition-colors text-right", n.urgent && "bg-red-50/50")} whileHover={{ x: -2 }}>
+          <motion.div key={n.id} onClick={() => { onClose(); router.push(n.href); }} className={cn("flex gap-3 p-4 hover:bg-surface-50 cursor-pointer transition-colors text-right", n.urgent && "bg-red-50/50")} whileHover={{ x: -2 }}>
             <div className="flex-1 min-w-0">
               <p className={cn("text-sm font-medium", n.urgent ? "text-danger" : "text-ink")}>{n.title}</p>
               <p className="text-xs text-ink-muted mt-0.5">{n.desc}</p>

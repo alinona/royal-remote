@@ -225,19 +225,20 @@ function ClassCard({
     <motion.div
       className="card-base p-5 hover:shadow-card-hover cursor-pointer text-right group"
       whileHover={{ y: -2 }}
+      onClick={() => onView(cls)}
     >
       {/* Header */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
           <button
-            onClick={() => onView(cls)}
+            onClick={e => { e.stopPropagation(); onView(cls); }}
             className="p-1.5 rounded-lg hover:bg-primary-50 text-ink-muted hover:text-primary-600 transition-colors"
             title="عرض التفاصيل"
           >
             <Eye className="w-3.5 h-3.5" />
           </button>
           <button
-            onClick={() => onEdit(cls)}
+            onClick={e => { e.stopPropagation(); onEdit(cls); }}
             className="p-1.5 rounded-lg hover:bg-amber-50 text-ink-muted hover:text-amber-600 transition-colors"
             title="تعديل"
           >
@@ -307,19 +308,20 @@ function TeachersGrid({
           <motion.div
             className="card-base p-5 hover:shadow-card-hover cursor-pointer text-right group"
             whileHover={{ y: -2 }}
+            onClick={() => onView(teacher)}
           >
             {/* Avatar */}
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                 <button
-                  onClick={() => onView(teacher)}
+                  onClick={e => { e.stopPropagation(); onView(teacher); }}
                   className="p-1.5 rounded-lg hover:bg-primary-50 text-ink-muted hover:text-primary-600 transition-colors"
                   title="عرض التفاصيل"
                 >
                   <Eye className="w-3.5 h-3.5" />
                 </button>
                 <button
-                  onClick={() => onEdit(teacher)}
+                  onClick={e => { e.stopPropagation(); onEdit(teacher); }}
                   className="p-1.5 rounded-lg hover:bg-amber-50 text-ink-muted hover:text-amber-600 transition-colors"
                   title="تعديل"
                 >
